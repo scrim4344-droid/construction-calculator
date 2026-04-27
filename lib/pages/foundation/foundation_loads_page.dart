@@ -14,7 +14,7 @@ import 'foundation_design_page.dart';
 /// Расчёт нагрузок на фундамент по СП 20.13330.2016.
 ///
 /// Это первый из пяти шагов «эталонного» модуля «Фундамент». Страница
-/// показывает входные данные (взяты из брифа), все шаги расчёта с
+/// показывает входные данные (взяты из технического задания), все шаги расчёта с
 /// формулами и подстановкой значений, и итоговую вертикальную нагрузку.
 ///
 /// Все расчёты делает [FoundationLoadsCalculator] из пакета
@@ -67,7 +67,7 @@ class _LoadsContent extends StatelessWidget {
   const _LoadsContent({required this.project});
   final HouseProject project;
 
-  /// Подобрать [WindRegion] по строке `windZone` из брифа («I», «II», …).
+  /// Подобрать [WindRegion] по строке `windZone` из технического задания («I», «II», …).
   WindRegion? _windFromBrief(String? windZone) {
     if (windZone == null) return null;
     switch (windZone.toUpperCase()) {
@@ -92,7 +92,7 @@ class _LoadsContent extends StatelessWidget {
     return null;
   }
 
-  /// Подобрать постоянные нагрузки от стен по выбранному материалу из брифа.
+  /// Подобрать постоянные нагрузки от стен по выбранному материалу из технического задания.
   List<WeightComponent> _wallsFromBrief(WallMaterial? material) {
     const defaults = PermanentLoadCalculator.defaults;
     switch (material) {
@@ -157,13 +157,13 @@ class _LoadsContent extends StatelessWidget {
       roofComponents: _roofFromBrief(project.roof),
       floors: brief.floors ?? 1,
       snowRegionOrigin:
-          'Из брифа: «Регион → $regionLabel» → ${snow.title} (карта 1, прил. Е СП 20)',
+          'Из технического задания: «Регион → $regionLabel» → ${snow.title} (карта 1, прил. Е СП 20)',
       windRegionOrigin:
-          'Из брифа: «Регион → $regionLabel» → ${wind.title} (карта 2, прил. Е СП 20)',
+          'Из технического задания: «Регион → $regionLabel» → ${wind.title} (карта 2, прил. Е СП 20)',
       floorsOrigin:
-          'Из брифа, шаг «Этажность» (значение: ${brief.floors} эт.)',
+          'Из технического задания, шаг «Этажность» (значение: ${brief.floors} эт.)',
       wallsOrigin:
-          'Из брифа, шаг «Материал стен» (выбор: ${brief.wallMaterial?.title ?? "—"})',
+          'Из технического задания, шаг «Материал стен» (выбор: ${brief.wallMaterial?.title ?? "—"})',
       floorsCompOrigin:
           'По умолчанию: деревянное перекрытие по балкам. На странице кровли/перекрытий можно поменять.',
       roofMaterialOrigin: project.roof.roofingMaterial != null
@@ -263,7 +263,7 @@ class _MissingFields extends StatelessWidget {
             const Icon(Icons.info_outline, size: 48),
             const SizedBox(height: 16),
             Text(
-              'Чтобы рассчитать нагрузки на фундамент, заполните бриф:',
+              'Чтобы рассчитать нагрузки на фундамент, заполните техническое задание:',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge,
             ),

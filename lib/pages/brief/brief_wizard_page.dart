@@ -13,7 +13,7 @@ import '../../models/user_mode.dart';
 import '../../state/app_state.dart';
 import '../../widgets/hints.dart';
 
-/// Многошаговый визард брифа клиента.
+/// Многошаговый визард технического задания клиента.
 ///
 /// Шаги:
 ///   1) Регион (с автозаполнением снегового/ветрового района по СП 20.13330,
@@ -26,7 +26,7 @@ import '../../widgets/hints.dart';
 ///   7) Желаемый материал стен;
 ///   8) Особые пожелания (свободный текст).
 ///
-/// Бриф сохраняется в проект **после каждого шага**, поэтому даже если
+/// Техническое задание сохраняется в проект **после каждого шага**, поэтому даже если
 /// пользователь закроет вкладку — прогресс не потеряется. По кнопке
 /// «Завершить» состав сооружения автоматически подтягивается из движка
 /// правил, а в режиме «Клиент» сразу же генерируется первая партия чертежей.
@@ -67,8 +67,8 @@ class _BriefWizardPageState extends State<BriefWizardPage> {
       SnackBar(
         content: Text(
           mode == UserMode.client
-              ? 'Бриф сохранён · состав сооружения и эскизы подобраны автоматически'
-              : 'Бриф сохранён · состав сооружения подобран. Можно редактировать.',
+              ? 'Техническое задание сохранено · состав сооружения и эскизы подобраны автоматически'
+              : 'Техническое задание сохранено · состав сооружения подобран. Можно редактировать.',
         ),
       ),
     );
@@ -81,7 +81,7 @@ class _BriefWizardPageState extends State<BriefWizardPage> {
     final project = _findProject(state);
     if (project == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Бриф клиента')),
+        appBar: AppBar(title: const Text('Техническое задание клиента')),
         body: const Center(child: Text('Проект не найден.')),
       );
     }
@@ -90,17 +90,17 @@ class _BriefWizardPageState extends State<BriefWizardPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Бриф · шаг ${_step + 1} из $_stepsCount'),
+        title: Text('Техническое задание · шаг ${_step + 1} из $_stepsCount'),
         actions: const [
           HintIconButton(
-            title: 'Бриф клиента',
+            title: 'Техническое задание клиента',
             sections: Hints.briefWizard,
           ),
         ],
       ),
       body: HintAutoShow(
         screenKey: 'brief-wizard',
-        title: 'Бриф клиента',
+        title: 'Техническое задание клиента',
         sections: Hints.briefWizard,
         child: Center(
           child: ConstrainedBox(

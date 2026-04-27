@@ -87,6 +87,11 @@ flutter:
   assets:
     - assets/fonts/DejaVuSans.ttf
     - assets/fonts/DejaVuSans-Bold.ttf
+    - assets/images/types/private_house.jpg
+    - assets/images/types/apartment_building.jpg
+    - assets/images/types/commercial_building.jpg
+    - assets/images/types/commercial_structure.jpg
+    - assets/images/types/metal_structure.jpg
 
   # To add assets to your application, add an assets section, like this:
   # assets:

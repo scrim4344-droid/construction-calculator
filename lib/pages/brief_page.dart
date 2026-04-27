@@ -7,8 +7,8 @@ import '../models/user_mode.dart';
 import '../state/app_state.dart';
 import 'brief/brief_wizard_page.dart';
 
-/// Стартовая страница раздела «Бриф клиента» — показывает текущую сводку
-/// брифа и кнопку запуска визарда (или «продолжить заполнять»).
+/// Стартовая страница раздела «Техническое задание клиента» — показывает текущую сводку
+/// технического задания и кнопку запуска визарда (или «продолжить заполнять»).
 ///
 /// В режиме «Клиент» подчёркиваем, что после прохождения визарда
 /// приложение само подтянет состав сооружения и сгенерирует эскизы.
@@ -31,7 +31,7 @@ class BriefPage extends StatelessWidget {
     final mode = state.mode ?? UserMode.client;
     if (project == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Бриф клиента')),
+        appBar: AppBar(title: const Text('Техническое задание клиента')),
         body: const Center(child: Text('Проект не найден.')),
       );
     }
@@ -42,7 +42,7 @@ class BriefPage extends StatelessWidget {
     final complete = brief.isComplete;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Бриф клиента')),
+      appBar: AppBar(title: const Text('Техническое задание клиента')),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),
@@ -58,10 +58,10 @@ class BriefPage extends StatelessWidget {
                     children: [
                       Text(
                         complete
-                            ? 'Бриф заполнен'
+                            ? 'Техническое задание заполнено'
                             : started
-                                ? 'Бриф заполняется'
-                                : 'Бриф ещё не заполнен',
+                                ? 'Техническое задание заполняется'
+                                : 'Техническое задание ещё не заполнено',
                         style: theme.textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),

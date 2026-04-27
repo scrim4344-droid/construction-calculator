@@ -3,20 +3,13 @@ import 'package:provider/provider.dart';
 
 import '../models/construction_type.dart';
 import '../models/house_project.dart';
-import '../services/link_opener.dart';
 import '../state/app_state.dart';
-import '../widgets/hints.dart';
 import 'project_create_page.dart';
 import 'project_details_page.dart';
 import 'settings_page.dart';
 
-const String _shareUrl =
-    'https://scrim4344-droid.github.io/construction-calculator/';
 const String _shareTitle =
     'Калькулятор проектировщика: расчёты и чертежи онлайн';
-const String _shareText =
-    'Создаём проект здания онлайн: бриф, состав, чертежи в PDF/DXF, '
-    'расчёт фундамента по СП 20/22/63 с пояснительной запиской.';
 
 const List<_LandingStep> _steps = [
   _LandingStep(
@@ -33,7 +26,7 @@ const List<_LandingStep> _steps = [
   ),
   _LandingStep(
     icon: Icons.fact_check_outlined,
-    title: 'Заполните бриф из 8 шагов',
+    title: 'Заполните техническое задание из 8 шагов',
     description: 'Участок, этажность, комнаты, материал стен, кровля, '
         'отделка, снеговой и ветровой район.',
   ),
@@ -66,10 +59,6 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: const _BrandTitle(),
         actions: [
-          const HintIconButton(
-            title: 'Главный экран',
-            sections: Hints.home,
-          ),
           IconButton(
             tooltip: 'Настройки',
             icon: const Icon(Icons.settings_outlined),
@@ -80,12 +69,7 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: const HintAutoShow(
-        screenKey: 'home',
-        title: 'Главный экран',
-        sections: Hints.home,
-        child: _LandingBody(),
-      ),
+      body: const _LandingBody(),
     );
   }
 }
@@ -142,8 +126,6 @@ class _LandingBody extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const _Hero(),
-                    const SizedBox(height: 16),
-                    const _ShareRow(),
                     const SizedBox(height: 28),
                     const _Description(),
                     const SizedBox(height: 32),
@@ -210,7 +192,7 @@ class _Hero extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Бриф → состав → чертежи → расчёты → пояснительная записка. '
+          'Техническое задание → состав → чертежи → расчёты → пояснительная записка. '
           'Без установки, прямо в браузере.',
           style: theme.textTheme.titleMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
@@ -238,7 +220,7 @@ class _Description extends StatelessWidget {
         children: [
           Text(
             'В этом приложении вы можете создать проект здания прямо '
-            'в браузере. Заполнение брифа в первый раз занимает 10–15 минут. '
+            'в браузере. Заполнение технического задания в первый раз занимает 10–15 минут. '
             'Программа подскажет состав сооружения, нарисует план этажа, '
             'рассчитает фундамент по действующим СП и сформирует '
             'пояснительную записку с подробным выводом всех значений и '
@@ -248,104 +230,12 @@ class _Description extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Чтобы начать — выберите тип сооружения ниже. Затем введёте '
-            'название проекта и попадёте в бриф.',
+            'название проекта и попадёте в техническое задание.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ShareRow extends StatelessWidget {
-  const _ShareRow();
-
-  @override
-  Widget build(BuildContext context) {
-    final shareText =
-        Uri.encodeComponent('$_shareTitle — $_shareText\n$_shareUrl');
-    final url = Uri.encodeComponent(_shareUrl);
-    final title = Uri.encodeComponent(_shareTitle);
-    final shares = <_Share>[
-      _Share(
-        label: 'WhatsApp',
-        color: const Color(0xFF25D366),
-        icon: Icons.chat_bubble_outline,
-        href: 'https://api.whatsapp.com/send?text=$shareText',
-      ),
-      _Share(
-        label: 'Telegram',
-        color: const Color(0xFF26A5E4),
-        icon: Icons.send_outlined,
-        href: 'https://t.me/share/url?url=$url&text=$title',
-      ),
-      _Share(
-        label: 'ВКонтакте',
-        color: const Color(0xFF0077FF),
-        icon: Icons.public,
-        href: 'https://vk.com/share.php?url=$url&title=$title',
-      ),
-      _Share(
-        label: 'Одноклассники',
-        color: const Color(0xFFEE8208),
-        icon: Icons.thumb_up_alt_outlined,
-        href: 'https://connect.ok.ru/offer?url=$url&title=$title',
-      ),
-    ];
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [for (final s in shares) _ShareButton(share: s)],
-    );
-  }
-}
-
-class _Share {
-  const _Share({
-    required this.label,
-    required this.color,
-    required this.icon,
-    required this.href,
-  });
-
-  final String label;
-  final Color color;
-  final IconData icon;
-  final String href;
-}
-
-class _ShareButton extends StatelessWidget {
-  const _ShareButton({required this.share});
-
-  final _Share share;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: share.color,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => LinkOpener.open(share.href),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(share.icon, color: Colors.white, size: 18),
-              const SizedBox(width: 6),
-              Text(
-                share.label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -470,9 +360,20 @@ const Map<ConstructionType, IconData> _typeIcons = {
   ConstructionType.metalStructure: Icons.precision_manufacturing_outlined,
 };
 
+const Map<ConstructionType, String> _typeImages = {
+  ConstructionType.privateHouse: 'assets/images/types/private_house.jpg',
+  ConstructionType.apartmentBuilding:
+      'assets/images/types/apartment_building.jpg',
+  ConstructionType.commercialBuilding:
+      'assets/images/types/commercial_building.jpg',
+  ConstructionType.commercialStructure:
+      'assets/images/types/commercial_structure.jpg',
+  ConstructionType.metalStructure: 'assets/images/types/metal_structure.jpg',
+};
+
 const Map<ConstructionType, String> _typeDescriptions = {
   ConstructionType.privateHouse:
-      'ИЖС, частный дом до 3 этажей. Полный поток: бриф → чертежи → расчёт '
+      'ИЖС, частный дом до 3 этажей. Полный поток: ТЗ → чертежи → расчёт '
           'фундамента → ПЗ.',
   ConstructionType.apartmentBuilding:
       'Многоквартирный дом 4–10 этажей по СП. Поддержка планируется в одном '
@@ -483,6 +384,19 @@ const Map<ConstructionType, String> _typeDescriptions = {
       'Складское, производственное или вспомогательное сооружение. В работе.',
   ConstructionType.metalStructure:
       'Каркасы, фермы, ангары из проката. Расчёт по СП 16. В работе.',
+};
+
+const Map<ConstructionType, String> _typeTooltips = {
+  ConstructionType.privateHouse:
+      'Готов: ТЗ → состав → чертежи → расчёт фундамента → ПЗ',
+  ConstructionType.apartmentBuilding:
+      'Скоро: жилой дом 4–10 этажей',
+  ConstructionType.commercialBuilding:
+      'Скоро: офис, магазин, общественное здание',
+  ConstructionType.commercialStructure:
+      'Скоро: склад, цех, вспомогательное сооружение',
+  ConstructionType.metalStructure:
+      'Скоро: каркасы, фермы, ангары из проката (СП 16)',
 };
 
 class _TypesGrid extends StatelessWidget {
@@ -499,7 +413,7 @@ class _TypesGrid extends StatelessWidget {
         crossAxisCount: 3,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        mainAxisExtent: 196,
+        mainAxisExtent: 200,
       ),
       itemBuilder: (_, i) => _TypeCard(type: types[i]),
     );
@@ -531,73 +445,116 @@ class _TypeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final implemented = type.isImplemented;
-    return Card(
-      shape: RoundedRectangleBorder(
+    final imagePath = _typeImages[type];
+    return Tooltip(
+      message: _typeTooltips[type] ?? '',
+      preferBelow: false,
+      verticalOffset: 12,
+      waitDuration: const Duration(milliseconds: 250),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: implemented
-              ? theme.colorScheme.primary
-              : theme.colorScheme.outlineVariant,
-          width: implemented ? 1.5 : 1,
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: implemented
-            ? () => _startProject(context, type)
-            : () => _showSoonDialog(context, type),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    _typeIcons[type] ?? Icons.business_outlined,
-                    size: 32,
-                    color: implemented
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.outline,
-                  ),
-                  const SizedBox(width: 8),
-                  if (!implemented)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'скоро',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.outline,
-                        ),
+        child: Material(
+          color: theme.colorScheme.surface,
+          child: InkWell(
+            onTap: implemented
+                ? () => _startProject(context, type)
+                : () => _showSoonDialog(context, type),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (imagePath != null)
+                  Positioned.fill(
+                    child: Opacity(
+                      opacity: implemented ? 0.32 : 0.18,
+                      child: Image.asset(
+                        imagePath,
+                        fit: BoxFit.cover,
                       ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                type.title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: implemented
-                      ? null
-                      : theme.colorScheme.onSurface.withOpacity(0.6),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Expanded(
-                child: Text(
-                  _typeDescriptions[type] ?? '',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                        colors: [
+                          theme.colorScheme.surface.withOpacity(0.0),
+                          theme.colorScheme.surface.withOpacity(0.65),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: implemented
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outlineVariant,
+                        width: implemented ? 1.5 : 1,
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            _typeIcons[type] ?? Icons.business_outlined,
+                            size: 32,
+                            color: implemented
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.outline,
+                          ),
+                          const SizedBox(width: 8),
+                          if (!implemented)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerHigh,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'скоро',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.outline,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        type.title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: implemented
+                              ? null
+                              : theme.colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Expanded(
+                        child: Text(
+                          _typeDescriptions[type] ?? '',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -631,7 +588,7 @@ class _TypeCard extends StatelessWidget {
         content: const Text(
           'Этот тип сооружения ещё в разработке. Сейчас полностью '
           'реализован только частный дом — на нём можно пройти весь поток '
-          'бриф → чертежи → расчёт фундамента → пояснительная записка.',
+          'техническое задание → чертежи → расчёт фундамента → пояснительная записка.',
         ),
         actions: [
           TextButton(

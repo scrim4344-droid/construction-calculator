@@ -15,7 +15,7 @@ import 'walls_page.dart';
 /// Экран «Состав сооружения» — список конструктивных элементов проекта.
 ///
 /// В режиме «Клиент» список **только для просмотра**: его автоматически
-/// подбирает движок правил на основе брифа, клиент не редактирует.
+/// подбирает движок правил на основе технического задания, клиент не редактирует.
 ///
 /// В режиме «Проектировщик» каждый элемент можно открыть и поменять
 /// (как в визарде фундамента). После сохранения изменений по кнопке
@@ -50,7 +50,7 @@ class CompositionPage extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     await state.applyAutoComposition(project);
     messenger.showSnackBar(
-      const SnackBar(content: Text('Применена рекомендация по брифу')),
+      const SnackBar(content: Text('Применена рекомендация по техническому заданию')),
     );
   }
 
@@ -104,7 +104,7 @@ class CompositionPage extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'Сначала заполните бриф клиента — состав '
+                              'Сначала заполните техническое задание клиента — состав '
                               'сооружения подберётся автоматически на его основе.',
                               style: theme.textTheme.bodyMedium,
                             ),
@@ -123,7 +123,7 @@ class CompositionPage extends StatelessWidget {
                         children: [
                           Text(
                             isClient
-                                ? 'Решения подобраны автоматически по брифу'
+                                ? 'Решения подобраны автоматически по техническому заданию'
                                 : 'Решения подобраны автоматически — можно править',
                             style: theme.textTheme.titleSmall,
                           ),
@@ -220,7 +220,7 @@ class CompositionPage extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: () => _resetToAuto(context, project),
                     icon: const Icon(Icons.auto_fix_high_outlined),
-                    label: const Text('Сбросить к рекомендации по брифу'),
+                    label: const Text('Сбросить к рекомендации по техническому заданию'),
                   ),
                 ],
               ],

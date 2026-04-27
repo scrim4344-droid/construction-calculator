@@ -10,10 +10,10 @@ import 'drawings_page.dart';
 
 /// Главный экран проекта.
 ///
-/// Показывает три карточки верхнего уровня: бриф клиента, состав
+/// Показывает три карточки верхнего уровня: техническое задание клиента, состав
 /// сооружения и чертежи. Состав сооружения — это уже отдельный экран,
 /// внутри которого живут конструктивные элементы (фундамент, стены, крыша,
-/// лестница и т. д., в зависимости от брифа).
+/// лестница и т. д., в зависимости от технического задания).
 class ProjectDetailsPage extends StatelessWidget {
   const ProjectDetailsPage({super.key, required this.projectId});
 
@@ -86,7 +86,7 @@ class ProjectDetailsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _SectionCard(
-                  title: 'Бриф клиента',
+                  title: 'Техническое задание клиента',
                   subtitle: project.brief.summary,
                   done: project.brief.isStarted,
                   icon: Icons.assignment_outlined,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Заглушка раздела «Лестница». Появляется в составе сооружения только
-/// когда этажность > 1 (или явный флаг в брифе).
+/// когда этажность > 1 (или явный флаг в техническом задании).
 class StaircasePage extends StatelessWidget {
   const StaircasePage({super.key, required this.projectId});
 

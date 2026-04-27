@@ -94,7 +94,7 @@ class _DesignContent extends StatelessWidget {
               const Icon(Icons.info_outline, size: 48),
               const SizedBox(height: 12),
               Text(
-                'Чтобы подобрать сечение фундамента, заполните бриф:',
+                'Чтобы подобрать сечение фундамента, заполните техническое задание:',
                 style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
@@ -125,14 +125,14 @@ class _DesignContent extends StatelessWidget {
           'Из расчёта нагрузок на предыдущей странице '
           '(q = g·n + p·n + S по СП 20.13330)',
       footprintOrigin:
-          'Из брифа: «${brief.footprintWidth} × ${brief.footprintLength} м» '
+          'Из технического задания: «${brief.footprintWidth} × ${brief.footprintLength} м» '
           '⇒ A = ${footprintArea.toStringAsFixed(1)} м²',
       wallsOrigin:
-          'Из брифа: периметр ${perimeter.toStringAsFixed(1)} м '
+          'Из технического задания: периметр ${perimeter.toStringAsFixed(1)} м '
           '+ 1 поперечная несущая стена ${brief.footprintWidth} м '
           '⇒ L = ${wallsLength.toStringAsFixed(1)} м (упрощённо)',
       soilOrigin:
-          'Из брифа, шаг «Грунты»: верхний слой — '
+          'Из технического задания, шаг «Грунты»: верхний слой — '
           '${brief.soilLayers.isNotEmpty ? (brief.soilLayers.first.type?.title ?? "не задано") : "не задано"}',
       freezingOrigin:
           'СП 131.13330 для региона «${brief.region ?? "—"}»: '
@@ -189,9 +189,9 @@ class _DesignContent extends StatelessWidget {
             'Глубина промерзания df':
                 '${freezing.toStringAsFixed(1)} м (СП 131.13330)',
             'Снеговой район':
-                'Из брифа → ${SnowRegion.byId(brief.snowZone ?? 3).title}',
+                'Из технического задания → ${SnowRegion.byId(brief.snowZone ?? 3).title}',
             'Ветровой район':
-                'Из брифа → район ${brief.windZone ?? 2}',
+                'Из технического задания → район ${brief.windZone ?? 2}',
           },
         ),
         const SizedBox(height: 32),
@@ -207,8 +207,8 @@ class _DesignContent extends StatelessWidget {
     return m;
   }
 
-  /// Маппинг между типом грунта в брифе (SoilType) и FoundationSoilType
-  /// в cc_engine. Сейчас в брифе типы упрощённые («песок», «глина», …).
+  /// Маппинг между типом грунта в техническом задании (SoilType) и FoundationSoilType
+  /// в cc_engine. Сейчас в техническом задании типы упрощённые («песок», «глина», …).
   /// Этот конвертер достанет верхний слой и подберёт ближайший аналог.
   static FoundationSoilType _soilFromBrief(List<SoilLayer> layers) {
     if (layers.isEmpty || layers.first.type == null) {
