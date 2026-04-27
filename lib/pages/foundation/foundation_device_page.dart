@@ -5,6 +5,7 @@ import '../../models/foundation.dart';
 import '../../models/house_project.dart';
 import '../../state/app_state.dart';
 import '../../widgets/hints.dart';
+import 'foundation_loads_page.dart';
 
 /// Шаг 2 раздела «Фундамент»: выбор устройства фундамента.
 ///
@@ -122,6 +123,24 @@ class _FoundationDevicePageState extends State<FoundationDevicePage> {
                     ),
                 ],
                 const SizedBox(height: 24),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FoundationLoadsPage(
+                          projectId: widget.projectId,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.calculate_outlined),
+                  label: const Text('Рассчитать нагрузки на фундамент'),
+                ),
+                const SizedBox(height: 12),
                 FilledButton(
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),

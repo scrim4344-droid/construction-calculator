@@ -52,6 +52,12 @@ dependencies:
   # не-вебовыми платформами не используется (web-приложение).
   web: ^1.0.0
 
+  # Локальный pub-пакет с расчётным движком (СП-нагрузки, армирование,
+  # теплотехника). Pure Dart, без Flutter. Импортируется как path-зависимость
+  # из `packages/cc_engine`. См. HANDOFF.md, раздел «cc_engine».
+  cc_engine:
+    path: packages/cc_engine
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
