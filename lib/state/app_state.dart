@@ -24,7 +24,7 @@ class AppState extends ChangeNotifier {
     required ProjectRepository projectRepository,
   })  : _settings = settingsRepository,
         _projects = projectRepository {
-    _mode = _settings.loadMode();
+    _mode = _settings.loadMode() ?? UserMode.designer;
     _hintsEnabled = _settings.loadHintsEnabled();
     _projectList = _projects.loadAll();
   }

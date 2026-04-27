@@ -8,7 +8,11 @@ import '../widgets/hints.dart';
 /// Экран создания нового проекта. Спрашиваем название и тип конструкции.
 /// Возвращает созданный проект через `Navigator.pop(context, project)`.
 class ProjectCreatePage extends StatefulWidget {
-  const ProjectCreatePage({super.key});
+  const ProjectCreatePage({super.key, this.initialType});
+
+  /// Тип сооружения, выбранный на главной. Используется как стартовое
+  /// значение радио-группы. Если `null`, по умолчанию частный дом.
+  final ConstructionType? initialType;
 
   @override
   State<ProjectCreatePage> createState() => _ProjectCreatePageState();
@@ -16,7 +20,8 @@ class ProjectCreatePage extends StatefulWidget {
 
 class _ProjectCreatePageState extends State<ProjectCreatePage> {
   final _name = TextEditingController(text: 'Дом клиента');
-  ConstructionType _type = ConstructionType.privateHouse;
+  late ConstructionType _type =
+      widget.initialType ?? ConstructionType.privateHouse;
   bool _saving = false;
 
   @override

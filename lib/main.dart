@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'pages/home_page.dart';
-import 'pages/mode_selection_page.dart';
 import 'state/app_state.dart';
 import 'storage/project_repository.dart';
 import 'storage/settings_repository.dart';
@@ -33,20 +32,8 @@ class ConstructionCalculatorApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const _Root(),
+        home: const HomePage(),
       ),
     );
-  }
-}
-
-/// Корневой виджет: показывает выбор режима при первом запуске,
-/// в остальных случаях — главный экран со списком проектов.
-class _Root extends StatelessWidget {
-  const _Root();
-
-  @override
-  Widget build(BuildContext context) {
-    final hasMode = context.select<AppState, bool>((s) => s.hasMode);
-    return hasMode ? const HomePage() : const ModeSelectionPage();
   }
 }
