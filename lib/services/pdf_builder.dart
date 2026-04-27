@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart' show rootBundle;
@@ -7,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../models/drawing.dart';
 import '../models/floor_plan.dart';
 import '../models/house_project.dart';
+import '../widgets/floor_plan_view.dart' show FloorPlanView;
 
 /// Сборка комплекта планов в PDF (формат A3, ландшафт). На каждый
 /// лист — один [FloorPlan] (схематический план этажа). В заголовке —
@@ -199,6 +201,32 @@ class PdfBuilder {
     );
   }
 
+  // Толщина стен (м), синхронно с FloorPlanView.
+  static const double _outerWall = FloorPlanView.outerWall;
+  static const double _innerWall = FloorPlanView.innerWall;
+  static const double _eps = 0.05;
+
+  // Палитра PDF.
+  static const PdfColor _wallMassColor = PdfColors.grey800;
+  static const PdfColor _surfaceColor = PdfColors.white;
+  static const PdfColor _roomFill = PdfColors.blue100;
+  static const PdfColor _staircaseFill = PdfColors.deepPurple100;
+  static const PdfColor _staircaseStroke = PdfColors.deepPurple400;
+  static const PdfColor _freeFill = PdfColors.amber100;
+  static const PdfColor _doorColor = PdfColors.teal700;
+  static const PdfColor _entryDoorColor = PdfColors.red700;
+  static const PdfColor _windowFill = PdfColors.lightBlue50;
+  static const PdfColor _windowStroke = PdfColors.blue700;
+
+  /// Рисует план так же, как `FloorPlanPainter` на экране:
+  ///   1) пятно заливается «массой стены» (тёмный onSurface);
+  ///   2) поверх — внутренние прямоугольники комнат, отступ от рёбер равен
+  ///      половине толщины стены (наружная 0.38 м, внутренняя 0.20 м) —
+  ///      это даёт визуальный эффект толстых стен;
+  ///   3) проёмы «вырезают» стену: окно — двойная линия (CAD-символ),
+  ///      дверь — створка + дуга направления открывания, открытый проход —
+  ///      просто заливка цветом свободной зоны;
+  ///   4) лестница — штриховка ступеней + стрелка подъёма.
   static void _paintPlan(
     PdfGraphics canvas,
     PdfPoint size,
@@ -217,75 +245,335 @@ class PdfBuilder {
     final oy = (h - planH) / 2;
 
     // PdfGraphics ось Y направлена вверх. У нас в модели — вниз.
-    // Преобразование: (mx, my) -> (ox + mx*scale, oy + (planH - my*scale)).
-    PdfPoint p(double mx, double my) =>
+    PdfPoint pp(double mx, double my) =>
         PdfPoint(ox + mx * scale, oy + planH - my * scale);
 
-    // Рамка пятна.
-    canvas.setStrokeColor(PdfColors.black);
-    canvas.setLineWidth(1.5);
-    final tl = p(0, 0);
-    canvas.drawRect(tl.x, tl.y - planH, planW, planH);
-    canvas.strokePath();
-
-    // Комнаты.
-    for (final r in plan.rooms) {
-      final fillColor = switch (r.kind) {
-        PlanRoomKind.staircase => PdfColors.deepPurple50,
-        PlanRoomKind.free => PdfColors.amber50,
-        PlanRoomKind.room => PdfColors.blue50,
-      };
-      final strokeColor = switch (r.kind) {
-        PlanRoomKind.staircase => PdfColors.deepPurple,
-        PlanRoomKind.free => PdfColors.amber700,
-        PlanRoomKind.room => PdfColors.blue,
-      };
-      final tl = p(r.x, r.y);
-      final rectW = r.width * scale;
-      final rectH = r.height * scale;
-      canvas.setFillColor(fillColor);
-      canvas.drawRect(tl.x, tl.y - rectH, rectW, rectH);
+    void fillRectM(double mx, double my, double mw, double mh) {
+      final tl = pp(mx, my);
+      canvas.drawRect(tl.x, tl.y - mh * scale, mw * scale, mh * scale);
       canvas.fillPath();
-      canvas.setStrokeColor(strokeColor);
-      canvas.setLineWidth(0.8);
-      canvas.drawRect(tl.x, tl.y - rectH, rectW, rectH);
+    }
+
+    void strokeRectM(
+      double mx,
+      double my,
+      double mw,
+      double mh,
+    ) {
+      final tl = pp(mx, my);
+      canvas.drawRect(tl.x, tl.y - mh * scale, mw * scale, mh * scale);
       canvas.strokePath();
-      // Подпись по центру комнаты.
-      final cx = ox + (r.x + r.width / 2) * scale;
-      final cy = oy + planH - (r.y + r.height / 2) * scale;
+    }
+
+    // 1. Заливка всего пятна цветом массы стены.
+    canvas.setFillColor(_wallMassColor);
+    fillRectM(0, 0, plan.width, plan.height);
+
+    // 2. Внутренние прямоугольники комнат поверх стен.
+    for (final r in plan.rooms) {
+      final inner = _innerRect(r, plan);
+      if (inner == null) continue;
+      final fillColor = switch (r.kind) {
+        PlanRoomKind.staircase => _staircaseFill,
+        PlanRoomKind.free => _freeFill,
+        PlanRoomKind.room => _roomFill,
+      };
+      canvas.setFillColor(fillColor);
+      fillRectM(inner.mx, inner.my, inner.mw, inner.mh);
+      if (r.kind == PlanRoomKind.staircase) {
+        _drawStaircasePattern(canvas, pp, inner);
+      }
+    }
+
+    // 3. Проёмы — окна, двери, открытые проходы.
+    for (final o in plan.openings) {
+      _drawOpening(canvas, plan, o, pp, scale);
+    }
+
+    // 4. Подписи комнат.
+    for (final r in plan.rooms) {
+      final inner = _innerRect(r, plan);
+      if (inner == null) continue;
+      final innerWPx = inner.mw * scale;
+      final innerHPx = inner.mh * scale;
+      if (innerWPx < 30 || innerHPx < 24) continue;
+      final cx = ox + (inner.mx + inner.mw / 2) * scale;
+      final cy = oy + planH - (inner.my + inner.mh / 2) * scale;
       _drawCenteredText(
         canvas,
         '${r.label}\n${r.area.toStringAsFixed(1)} м²',
         cx,
         cy,
-        fontSize: rectW > 80 ? 9 : 7,
+        fontSize: innerWPx > 80 ? 9 : 7,
         font: font,
       );
     }
 
-    // Проёмы.
-    for (final o in plan.openings) {
-      final color = switch (o.kind) {
-        OpeningKind.door => PdfColors.green,
-        OpeningKind.externalDoor => PdfColors.red,
-        OpeningKind.window => PdfColors.cyan700,
-        OpeningKind.archway => PdfColors.grey,
-      };
-      canvas.setStrokeColor(color);
-      canvas.setLineWidth(2.5);
-      final PdfPoint a;
-      final PdfPoint b;
-      if (o.side.isHorizontal) {
-        a = p(o.x, o.y);
-        b = p(o.x + o.length, o.y);
+    // 5. Внешний контур пятна — поверх всего.
+    canvas.setStrokeColor(PdfColors.black);
+    canvas.setLineWidth(1.0);
+    strokeRectM(0, 0, plan.width, plan.height);
+  }
+
+  /// Внутренний прямоугольник комнаты с учётом толщины стен.
+  /// Возвращает `null`, если стены «съели» всю комнату.
+  static _RectM? _innerRect(PlanRoom r, FloorPlan plan) {
+    final left = _isOuter(r.x, 0) ? _outerWall / 2 : _innerWall / 2;
+    final right = _isOuter(r.x + r.width, plan.width)
+        ? _outerWall / 2
+        : _innerWall / 2;
+    final top = _isOuter(r.y, 0) ? _outerWall / 2 : _innerWall / 2;
+    final bottom = _isOuter(r.y + r.height, plan.height)
+        ? _outerWall / 2
+        : _innerWall / 2;
+    final innerW = r.width - left - right;
+    final innerH = r.height - top - bottom;
+    if (innerW <= 0 || innerH <= 0) return null;
+    return _RectM(r.x + left, r.y + top, innerW, innerH);
+  }
+
+  static bool _isOuter(double v, double boundary) =>
+      (v - boundary).abs() < _eps;
+
+  static bool _isOpeningOnOuterWall(FloorPlan plan, PlanOpening o) {
+    switch (o.side) {
+      case WallSide.top:
+        return o.y < _eps;
+      case WallSide.bottom:
+        return (plan.height - o.y).abs() < _eps;
+      case WallSide.left:
+        return o.x < _eps;
+      case WallSide.right:
+        return (plan.width - o.x).abs() < _eps;
+    }
+  }
+
+  static void _drawOpening(
+    PdfGraphics canvas,
+    FloorPlan plan,
+    PlanOpening o,
+    PdfPoint Function(double, double) pp,
+    double scale,
+  ) {
+    final isExternal = _isOpeningOnOuterWall(plan, o);
+    final thickness = isExternal ? _outerWall : _innerWall;
+    final isVerticalWall = !o.side.isHorizontal;
+
+    // Прямоугольник проёма в модельных координатах (Y вниз).
+    final double mx, my, mw, mh;
+    if (isVerticalWall) {
+      mx = o.x - thickness / 2;
+      my = o.y;
+      mw = thickness;
+      mh = o.length;
+    } else {
+      mx = o.x;
+      my = o.y - thickness / 2;
+      mw = o.length;
+      mh = thickness;
+    }
+
+    void fillRect(PdfColor c) {
+      canvas.setFillColor(c);
+      final tl = pp(mx, my);
+      canvas.drawRect(tl.x, tl.y - mh * scale, mw * scale, mh * scale);
+      canvas.fillPath();
+    }
+
+    if (o.kind == OpeningKind.archway) {
+      // Открытый проход — две свободные зоны соединены, рисуем заливку.
+      fillRect(_freeFill);
+      return;
+    }
+
+    if (o.kind == OpeningKind.window) {
+      // Окно — заливка + контур + двойная линия (стандартный CAD-символ).
+      fillRect(_windowFill);
+      canvas.setStrokeColor(_windowStroke);
+      canvas.setLineWidth(0.7);
+      final tl = pp(mx, my);
+      canvas.drawRect(tl.x, tl.y - mh * scale, mw * scale, mh * scale);
+      canvas.strokePath();
+      // Две параллельные линии вдоль стены.
+      const double inset = 0.04;
+      if (isVerticalWall) {
+        final m1 = mx + mw * 0.33;
+        final m2 = mx + mw * 0.67;
+        final p1a = pp(m1, my + inset);
+        final p1b = pp(m1, my + mh - inset);
+        final p2a = pp(m2, my + inset);
+        final p2b = pp(m2, my + mh - inset);
+        canvas.drawLine(p1a.x, p1a.y, p1b.x, p1b.y);
+        canvas.strokePath();
+        canvas.drawLine(p2a.x, p2a.y, p2b.x, p2b.y);
+        canvas.strokePath();
       } else {
-        a = p(o.x, o.y);
-        b = p(o.x, o.y + o.length);
+        final m1 = my + mh * 0.33;
+        final m2 = my + mh * 0.67;
+        final p1a = pp(mx + inset, m1);
+        final p1b = pp(mx + mw - inset, m1);
+        final p2a = pp(mx + inset, m2);
+        final p2b = pp(mx + mw - inset, m2);
+        canvas.drawLine(p1a.x, p1a.y, p1b.x, p1b.y);
+        canvas.strokePath();
+        canvas.drawLine(p2a.x, p2a.y, p2b.x, p2b.y);
+        canvas.strokePath();
       }
+      return;
+    }
+
+    // Дверь: «вырезаем» стену цветом пола, рисуем створку и дугу.
+    fillRect(_surfaceColor);
+    final isEntry = o.kind == OpeningKind.externalDoor;
+    final color = isEntry ? _entryDoorColor : _doorColor;
+    canvas.setStrokeColor(color);
+    canvas.setLineWidth(isEntry ? 1.4 : 1.0);
+
+    // Координаты hinge / leaf-end в модельной системе (Y вниз).
+    final double hingeX, hingeY, leafX, leafY;
+    final double startAngle;
+    const double sweep = math.pi / 2;
+    if (isVerticalWall) {
+      final centerM = mx + mw / 2;
+      if (o.swing >= 0) {
+        hingeX = centerM;
+        hingeY = my;
+        leafX = centerM + o.length;
+        leafY = my;
+        startAngle = 0;
+      } else {
+        hingeX = centerM;
+        hingeY = my + mh;
+        leafX = centerM + o.length;
+        leafY = my + mh;
+        startAngle = -math.pi / 2;
+      }
+    } else {
+      final centerM = my + mh / 2;
+      if (o.swing >= 0) {
+        hingeX = mx;
+        hingeY = centerM;
+        leafX = mx;
+        leafY = centerM + o.length;
+      } else {
+        hingeX = mx + mw;
+        hingeY = centerM;
+        leafX = mx + mw;
+        leafY = centerM + o.length;
+      }
+      startAngle = math.pi / 2;
+    }
+
+    // Створка (полотно).
+    final hp = pp(hingeX, hingeY);
+    final lp = pp(leafX, leafY);
+    canvas.drawLine(hp.x, hp.y, lp.x, lp.y);
+    canvas.strokePath();
+
+    // Дуга направления открывания — четверть круга от leafEnd к перпендикуляру.
+    canvas.setStrokeColor(_lighten(color, 0.45));
+    canvas.setLineWidth(0.6);
+    _drawArcM(
+      canvas,
+      pp,
+      cxM: hingeX,
+      cyM: hingeY,
+      radiusM: o.length,
+      startAngle: startAngle,
+      sweep: sweep,
+    );
+
+    if (isEntry) {
+      // Жирная отметка стороны улицы — короткий штрих наружу.
+      canvas.setStrokeColor(color);
+      canvas.setLineWidth(1.6);
+      final outX = isVerticalWall
+          ? (o.side == WallSide.left ? mx - 0.25 : mx + mw + 0.25)
+          : mx + mw / 2;
+      final outY = isVerticalWall
+          ? my + mh / 2
+          : (o.side == WallSide.top ? my - 0.25 : my + mh + 0.25);
+      final innX = isVerticalWall
+          ? (o.side == WallSide.left ? mx + mw : mx)
+          : mx + mw / 2;
+      final innY = isVerticalWall ? my + mh / 2 : my + mh / 2;
+      final a = pp(outX, outY);
+      final b = pp(innX, innY);
       canvas.drawLine(a.x, a.y, b.x, b.y);
       canvas.strokePath();
     }
   }
+
+  /// Полилиния-аппроксимация дуги в модельных координатах. [steps]
+  /// сегментов хватает на гладкую кривую при печати A3.
+  static void _drawArcM(
+    PdfGraphics canvas,
+    PdfPoint Function(double, double) pp, {
+    required double cxM,
+    required double cyM,
+    required double radiusM,
+    required double startAngle,
+    required double sweep,
+    int steps = 24,
+  }) {
+    final p0 = pp(
+      cxM + radiusM * math.cos(startAngle),
+      cyM + radiusM * math.sin(startAngle),
+    );
+    canvas.moveTo(p0.x, p0.y);
+    for (var i = 1; i <= steps; i++) {
+      final a = startAngle + sweep * i / steps;
+      final p = pp(
+        cxM + radiusM * math.cos(a),
+        cyM + radiusM * math.sin(a),
+      );
+      canvas.lineTo(p.x, p.y);
+    }
+    canvas.strokePath();
+  }
+
+  static void _drawStaircasePattern(
+    PdfGraphics canvas,
+    PdfPoint Function(double, double) pp,
+    _RectM r,
+  ) {
+    canvas.setStrokeColor(_staircaseStroke);
+    canvas.setLineWidth(0.6);
+    final horizontal = r.mw >= r.mh;
+    const steps = 8;
+    if (horizontal) {
+      final stepW = r.mw / steps;
+      for (var i = 1; i < steps; i++) {
+        final lx = r.mx + stepW * i;
+        final a = pp(lx, r.my + 0.08);
+        final b = pp(lx, r.my + r.mh - 0.08);
+        canvas.drawLine(a.x, a.y, b.x, b.y);
+        canvas.strokePath();
+      }
+    } else {
+      final stepH = r.mh / steps;
+      for (var i = 1; i < steps; i++) {
+        final ly = r.my + stepH * i;
+        final a = pp(r.mx + 0.08, ly);
+        final b = pp(r.mx + r.mw - 0.08, ly);
+        canvas.drawLine(a.x, a.y, b.x, b.y);
+        canvas.strokePath();
+      }
+    }
+    // Стрелка направления подъёма (по диагонали).
+    canvas.setLineWidth(1.0);
+    final aArr = pp(r.mx + 0.15, r.my + r.mh - 0.15);
+    final bArr = pp(r.mx + r.mw - 0.15, r.my + 0.15);
+    canvas.drawLine(aArr.x, aArr.y, bArr.x, bArr.y);
+    canvas.strokePath();
+  }
+
+  /// Осветлить цвет на [t] (0..1) — линейная интерполяция к белому.
+  static PdfColor _lighten(PdfColor c, double t) => PdfColor(
+        c.red + (1 - c.red) * t,
+        c.green + (1 - c.green) * t,
+        c.blue + (1 - c.blue) * t,
+      );
 
   static void _drawCenteredText(
     PdfGraphics canvas,
@@ -312,4 +600,13 @@ class PdfBuilder {
     return '${two(d.day)}.${two(d.month)}.${d.year} '
         '${two(d.hour)}:${two(d.minute)}';
   }
+}
+
+/// Прямоугольник в модельных координатах (метры, ось Y вниз).
+class _RectM {
+  final double mx;
+  final double my;
+  final double mw;
+  final double mh;
+  const _RectM(this.mx, this.my, this.mw, this.mh);
 }
