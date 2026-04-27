@@ -456,7 +456,7 @@ class _SoilLayerCardState extends State<_SoilLayerCard> {
               children: [
                 Expanded(
                   child: _NumField(
-                    label: 'Глубина кровли, м',
+                    label: 'Глубина залегания, м',
                     value: layer.topDepth,
                     onChanged: (v) {
                       layer.topDepth = v;
@@ -467,7 +467,7 @@ class _SoilLayerCardState extends State<_SoilLayerCard> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _NumField(
-                    label: 'Мощность, м',
+                    label: 'Толщина слоя, м',
                     value: layer.thickness,
                     onChanged: (v) {
                       layer.thickness = v;

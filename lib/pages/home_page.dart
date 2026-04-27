@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../models/construction_type.dart';
-import '../models/house_project.dart';
-import '../state/app_state.dart';
-import 'project_create_page.dart';
-import 'project_details_page.dart';
+import 'projects_of_type_page.dart';
 import 'settings_page.dart';
 
 const String _shareTitle =
@@ -138,8 +134,8 @@ class _LandingBody extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Выберите тип сооружения — мы сразу откроем создание '
-                      'проекта с этим типом.',
+                      'Выберите тип сооружения — откроется список ваших '
+                      'проектов этого типа.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),
@@ -160,8 +156,6 @@ class _LandingBody extends StatelessWidget {
                       const _StepsGrid()
                     else
                       const _StepsList(),
-                    const SizedBox(height: 40),
-                    const _ProjectsSection(),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -371,21 +365,6 @@ const Map<ConstructionType, String> _typeImages = {
   ConstructionType.metalStructure: 'assets/images/types/metal_structure.jpg',
 };
 
-const Map<ConstructionType, String> _typeDescriptions = {
-  ConstructionType.privateHouse:
-      'ИЖС, частный дом до 3 этажей. Полный поток: ТЗ → чертежи → расчёт '
-          'фундамента → ПЗ.',
-  ConstructionType.apartmentBuilding:
-      'Многоквартирный дом 4–10 этажей по СП. Поддержка планируется в одном '
-          'из следующих обновлений.',
-  ConstructionType.commercialBuilding:
-      'Торговый, офисный или общественный объект. В работе.',
-  ConstructionType.commercialStructure:
-      'Складское, производственное или вспомогательное сооружение. В работе.',
-  ConstructionType.metalStructure:
-      'Каркасы, фермы, ангары из проката. Расчёт по СП 16. В работе.',
-};
-
 const Map<ConstructionType, String> _typeTooltips = {
   ConstructionType.privateHouse:
       'Готов: ТЗ → состав → чертежи → расчёт фундамента → ПЗ',
@@ -413,7 +392,7 @@ class _TypesGrid extends StatelessWidget {
         crossAxisCount: 3,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        mainAxisExtent: 200,
+        mainAxisExtent: 140,
       ),
       itemBuilder: (_, i) => _TypeCard(type: types[i]),
     );
@@ -456,9 +435,7 @@ class _TypeCard extends StatelessWidget {
         child: Material(
           color: theme.colorScheme.surface,
           child: InkWell(
-            onTap: implemented
-                ? () => _startProject(context, type)
-                : () => _showSoonDialog(context, type),
+            onTap: () => _openType(context, type),
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -531,23 +508,14 @@ class _TypeCard extends StatelessWidget {
                             ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const Spacer(),
                       Text(
                         type.title,
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: implemented
                               ? null
                               : theme.colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Expanded(
-                        child: Text(
-                          _typeDescriptions[type] ?? '',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
                         ),
                       ),
                     ],
@@ -561,179 +529,13 @@ class _TypeCard extends StatelessWidget {
     );
   }
 
-  Future<void> _startProject(
-      BuildContext context, ConstructionType type) async {
-    final state = context.read<AppState>();
-    final project = await Navigator.push<HouseProject>(
+  void _openType(BuildContext context, ConstructionType type) {
+    Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ProjectCreatePage(initialType: type),
-      ),
-    );
-    if (project == null || !context.mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ProjectDetailsPage(projectId: project.id),
-      ),
-    );
-    await state.saveProject(project);
-  }
-
-  void _showSoonDialog(BuildContext context, ConstructionType type) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(type.title),
-        content: const Text(
-          'Этот тип сооружения ещё в разработке. Сейчас полностью '
-          'реализован только частный дом — на нём можно пройти весь поток '
-          'техническое задание → чертежи → расчёт фундамента → пояснительная записка.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Понятно'),
-          ),
-        ],
+        builder: (_) => ProjectsOfTypePage(type: type),
       ),
     );
   }
 }
 
-class _ProjectsSection extends StatelessWidget {
-  const _ProjectsSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final state = context.watch<AppState>();
-    final theme = Theme.of(context);
-    if (state.projects.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Мои проекты',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 12),
-        for (var i = 0; i < state.projects.length; i++) ...[
-          _ProjectTile(project: state.projects[i]),
-          if (i < state.projects.length - 1) const SizedBox(height: 8),
-        ],
-      ],
-    );
-  }
-}
-
-class _ProjectTile extends StatelessWidget {
-  const _ProjectTile({required this.project});
-
-  final HouseProject project;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Icon(_typeIcons[project.constructionType] ??
-            Icons.home_work_outlined),
-        title: Text(project.name, style: theme.textTheme.titleMedium),
-        subtitle: Text(
-          '${project.constructionType.title} · '
-          'обновлён ${_formatDate(project.updatedAt)}',
-        ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'rename':
-                _rename(context);
-                break;
-              case 'delete':
-                _delete(context);
-                break;
-            }
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'rename', child: Text('Переименовать')),
-            PopupMenuItem(value: 'delete', child: Text('Удалить')),
-          ],
-        ),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProjectDetailsPage(projectId: project.id),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _rename(BuildContext context) async {
-    final state = context.read<AppState>();
-    final controller = TextEditingController(text: project.name);
-    final name = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Переименовать проект'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: 'Название'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Сохранить'),
-          ),
-        ],
-      ),
-    );
-    if (name == null || name.isEmpty) return;
-    await state.renameProject(project.id, name);
-  }
-
-  Future<void> _delete(BuildContext context) async {
-    final state = context.read<AppState>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Удалить проект?'),
-        content: Text(
-          'Проект «${project.name}» будет удалён без возможности восстановления.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Отмена'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Удалить'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    await state.deleteProject(project.id);
-  }
-}
-
-String _formatDate(DateTime dt) {
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${two(dt.day)}.${two(dt.month)}.${dt.year} '
-      '${two(dt.hour)}:${two(dt.minute)}';
-}
