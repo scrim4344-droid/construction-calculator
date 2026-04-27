@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../state/app_state.dart';
 
 /// Иконка «?» в AppBar, открывает диалог с пошаговой подсказкой по экрану.
 ///
@@ -25,9 +28,64 @@ class HintIconButton extends StatelessWidget {
         context,
         title: title,
         sections: sections,
+        // Из ручного «?» можно тоже выключить экскурсию, чтобы не лазить
+        // в настройки — поведение симметрично авто-показу.
+        showDisableButton: true,
       ),
     );
   }
+}
+
+/// Виджет-обёртка, который при первом построении в текущей сессии
+/// автоматически показывает обучающую подсказку для экрана `screenKey`.
+///
+/// Не вмешивается в дерево виджетов: возвращает [child] как есть.
+/// Состояние «уже показывали» хранится в [AppState], сбрасывается на
+/// новой загрузке страницы — пользователя «ведут за руку» при каждом
+/// заходе. Когда пользователь нажимает «Не показывать подсказки» в
+/// диалоге, флаг `hintsEnabled` сохраняется в SharedPreferences.
+class HintAutoShow extends StatefulWidget {
+  const HintAutoShow({
+    super.key,
+    required this.screenKey,
+    required this.title,
+    required this.sections,
+    required this.child,
+  });
+
+  final String screenKey;
+  final String title;
+  final List<HintSection> sections;
+  final Widget child;
+
+  @override
+  State<HintAutoShow> createState() => _HintAutoShowState();
+}
+
+class _HintAutoShowState extends State<HintAutoShow> {
+  bool _scheduled = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_scheduled) return;
+    final state = context.read<AppState>();
+    if (!state.shouldAutoShowHint(widget.screenKey)) return;
+    _scheduled = true;
+    state.markHintShown(widget.screenKey);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showHintDialog(
+        context,
+        title: widget.title,
+        sections: widget.sections,
+        showDisableButton: true,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// Один раздел подсказки. Может быть либо текстовым абзацем (через [body]),
@@ -50,11 +108,12 @@ Future<void> showHintDialog(
   BuildContext context, {
   required String title,
   required List<HintSection> sections,
+  bool showDisableButton = false,
 }) {
   final theme = Theme.of(context);
   return showDialog<void>(
     context: context,
-    builder: (context) {
+    builder: (dialogContext) {
       return AlertDialog(
         icon: const Icon(Icons.lightbulb_outline),
         title: Text(title),
@@ -129,8 +188,20 @@ Future<void> showHintDialog(
           ),
         ),
         actions: [
+          if (showDisableButton)
+            TextButton(
+              onPressed: () async {
+                // Снимаем экскурсию глобально и закрываем диалог. Используем
+                // context самой страницы (он переживает закрытие диалога),
+                // чтобы безопасно дёрнуть AppState.
+                final state = context.read<AppState>();
+                Navigator.pop(dialogContext);
+                await state.setHintsEnabled(false);
+              },
+              child: const Text('Не показывать подсказки'),
+            ),
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Понятно'),
           ),
         ],

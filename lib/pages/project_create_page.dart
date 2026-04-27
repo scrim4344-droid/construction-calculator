@@ -48,55 +48,60 @@ class _ProjectCreatePageState extends State<ProjectCreatePage> {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            shrinkWrap: true,
-            children: [
-              Text('Название проекта', style: theme.textTheme.titleSmall),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _name,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Например: «Дом для семьи Ивановых»',
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text('Тип конструкции', style: theme.textTheme.titleSmall),
-              const SizedBox(height: 8),
-              for (final type in ConstructionType.values)
-                RadioListTile<ConstructionType>(
-                  value: type,
-                  groupValue: _type,
-                  onChanged: type.isImplemented
-                      ? (v) => setState(() => _type = v ?? _type)
-                      : null,
-                  title: Row(
-                    children: [
-                      Expanded(child: Text(type.title)),
-                      if (!type.isImplemented)
-                        Text(
-                          'скоро',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.outline,
-                          ),
-                        ),
-                    ],
+      body: HintAutoShow(
+        screenKey: 'project-create',
+        title: 'Новый проект',
+        sections: Hints.projectCreate,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              shrinkWrap: true,
+              children: [
+                Text('Название проекта', style: theme.textTheme.titleSmall),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _name,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Например: «Дом для семьи Ивановых»',
                   ),
                 ),
-              const SizedBox(height: 24),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                const SizedBox(height: 24),
+                Text('Тип конструкции', style: theme.textTheme.titleSmall),
+                const SizedBox(height: 8),
+                for (final type in ConstructionType.values)
+                  RadioListTile<ConstructionType>(
+                    value: type,
+                    groupValue: _type,
+                    onChanged: type.isImplemented
+                        ? (v) => setState(() => _type = v ?? _type)
+                        : null,
+                    title: Row(
+                      children: [
+                        Expanded(child: Text(type.title)),
+                        if (!type.isImplemented)
+                          Text(
+                            'скоро',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.outline,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  onPressed: _saving ? null : _create,
+                  child: const Text('Создать проект'),
                 ),
-                onPressed: _saving ? null : _create,
-                child: const Text('Создать проект'),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

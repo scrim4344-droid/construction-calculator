@@ -17,7 +17,12 @@ import 'package:construction_calculator/storage/settings_repository.dart';
 Future<AppState> _createState({
   Map<String, Object> initialValues = const {},
 }) async {
-  SharedPreferences.setMockInitialValues(initialValues);
+  // Подсказки в тестах выключены, чтобы автодиалог не вылезал поверх
+  // экранов и не ломал поиск виджетов. Поведение «вести за руку» проверим
+  // отдельным тестом.
+  SharedPreferences.setMockInitialValues(
+    {'hints_enabled': false, ...initialValues},
+  );
   final settings = await SettingsRepository.create();
   final projects = await ProjectRepository.create();
   return AppState(settingsRepository: settings, projectRepository: projects);

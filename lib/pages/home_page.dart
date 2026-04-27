@@ -47,12 +47,17 @@ class HomePage extends StatelessWidget {
           label: const Text('Новый проект'),
         ),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: state.projects.isEmpty
-              ? _EmptyState(mode: mode)
-              : _ProjectList(projects: state.projects),
+      body: HintAutoShow(
+        screenKey: 'home',
+        title: 'Главный экран',
+        sections: Hints.home,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: state.projects.isEmpty
+                ? _EmptyState(mode: mode)
+                : _ProjectList(projects: state.projects),
+          ),
         ),
       ),
     );
@@ -144,8 +149,7 @@ class _ProjectTile extends StatelessWidget {
     final theme = Theme.of(context);
     return Card(
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: const Icon(Icons.home_work_outlined),
         title: Text(project.name, style: theme.textTheme.titleMedium),
         subtitle: Text(

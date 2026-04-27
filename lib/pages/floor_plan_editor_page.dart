@@ -520,7 +520,8 @@ class _FloorPlanEditorPageState extends State<FloorPlanEditorPage> {
       if (start.side.isHorizontal) {
         final endX = start.x + start.length;
         if (_openingHandle == _OpeningHandle.start) {
-          final nx = (start.x + dx).clamp(0.0, endX - _minOpeningLen).toDouble();
+          final nx =
+              (start.x + dx).clamp(0.0, endX - _minOpeningLen).toDouble();
           updated = PlanOpening(
             kind: start.kind,
             side: start.side,
@@ -530,7 +531,9 @@ class _FloorPlanEditorPageState extends State<FloorPlanEditorPage> {
             swing: start.swing,
           );
         } else {
-          final ne = (endX + dx).clamp(start.x + _minOpeningLen, _plan.width).toDouble();
+          final ne = (endX + dx)
+              .clamp(start.x + _minOpeningLen, _plan.width)
+              .toDouble();
           updated = PlanOpening(
             kind: start.kind,
             side: start.side,
@@ -543,7 +546,8 @@ class _FloorPlanEditorPageState extends State<FloorPlanEditorPage> {
       } else {
         final endY = start.y + start.length;
         if (_openingHandle == _OpeningHandle.start) {
-          final ny = (start.y + dy).clamp(0.0, endY - _minOpeningLen).toDouble();
+          final ny =
+              (start.y + dy).clamp(0.0, endY - _minOpeningLen).toDouble();
           updated = PlanOpening(
             kind: start.kind,
             side: start.side,
@@ -553,7 +557,9 @@ class _FloorPlanEditorPageState extends State<FloorPlanEditorPage> {
             swing: start.swing,
           );
         } else {
-          final ne = (endY + dy).clamp(start.y + _minOpeningLen, _plan.height).toDouble();
+          final ne = (endY + dy)
+              .clamp(start.y + _minOpeningLen, _plan.height)
+              .toDouble();
           updated = PlanOpening(
             kind: start.kind,
             side: start.side,
@@ -673,117 +679,123 @@ class _FloorPlanEditorPageState extends State<FloorPlanEditorPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Переключатель режима.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: SegmentedButton<_EditorMode>(
-              segments: const [
-                ButtonSegment(
-                  value: _EditorMode.rooms,
-                  label: Text('Комнаты'),
-                  icon: Icon(Icons.crop_square),
-                ),
-                ButtonSegment(
-                  value: _EditorMode.openings,
-                  label: Text('Двери и окна'),
-                  icon: Icon(Icons.door_sliding_outlined),
-                ),
-              ],
-              selected: {_mode},
-              onSelectionChanged: (s) {
-                setState(() {
-                  _mode = s.first;
-                  _selectedIndex = null;
-                  _selectedOpening = null;
-                  _dragMode = _DragMode.none;
-                });
-              },
-            ),
-          ),
-          Container(
-            width: double.infinity,
-            color: overlaps.isNotEmpty
-                ? theme.colorScheme.errorContainer
-                : theme.colorScheme.surfaceContainerLow,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              overlaps.isNotEmpty
-                  ? 'Внимание: комнаты пересекаются (красные рамки). '
-                      'Разведите их, чтобы можно было сохранить.'
-                  : (isRoomsMode
-                      ? (selectedIsRoom
-                          ? 'Тяните за тело — переместить, за уголки — '
-                              'изменить размер. Привязка к сетке 0.1 м. '
-                              'После сохранения двери и окна пересчитаются.'
-                          : 'Коснитесь комнаты, чтобы выделить. '
-                              'Лестница и коридор не редактируются вручную.')
-                      : (selectedOpening != null
-                          ? 'Тяните за тело — двигать вдоль стены, '
-                              'за концы — менять длину. Привязка к 0.1 м. '
-                              'Ручная правка отключает автоперерасчёт.'
-                          : 'Коснитесь двери или окна, чтобы выделить. '
-                              'Кнопками сверху можно добавить новые.')),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: overlaps.isNotEmpty
-                    ? theme.colorScheme.onErrorContainer
-                    : null,
+      body: HintAutoShow(
+        screenKey: 'floor-plan-editor',
+        title: 'Редактор плана',
+        sections: Hints.floorPlanEditor,
+        child: Column(
+          children: [
+            // Переключатель режима.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: SegmentedButton<_EditorMode>(
+                segments: const [
+                  ButtonSegment(
+                    value: _EditorMode.rooms,
+                    label: Text('Комнаты'),
+                    icon: Icon(Icons.crop_square),
+                  ),
+                  ButtonSegment(
+                    value: _EditorMode.openings,
+                    label: Text('Двери и окна'),
+                    icon: Icon(Icons.door_sliding_outlined),
+                  ),
+                ],
+                selected: {_mode},
+                onSelectionChanged: (s) {
+                  setState(() {
+                    _mode = s.first;
+                    _selectedIndex = null;
+                    _selectedOpening = null;
+                    _dragMode = _DragMode.none;
+                  });
+                },
               ),
             ),
-          ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final size = Size(constraints.maxWidth, constraints.maxHeight);
-                final t = FloorPlanTransform.compute(
-                  size: size,
-                  plan: _plan,
-                  padding: _padding,
-                );
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onPanDown: (d) => _onPanStart(d.localPosition, t),
-                  onPanUpdate: (d) => _onPanUpdate(d.localPosition, t),
-                  onPanEnd: (_) => _onPanEnd(),
-                  onPanCancel: _onPanEnd,
-                  onTapDown: (d) {
-                    _onPanStart(d.localPosition, t);
-                    _onPanEnd();
-                  },
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: FloorPlanView(plan: _plan, padding: _padding),
-                      ),
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: CustomPaint(
-                            painter: _SelectionOverlayPainter(
-                              plan: _plan,
-                              selectedIndex:
-                                  isRoomsMode ? _selectedIndex : null,
-                              selectedOpeningIndex:
-                                  !isRoomsMode ? _selectedOpening : null,
-                              overlapping: overlaps,
-                              padding: _padding,
-                              accent: theme.colorScheme.primary,
-                              error: theme.colorScheme.error,
-                              handleFill: theme.colorScheme.surface,
+            Container(
+              width: double.infinity,
+              color: overlaps.isNotEmpty
+                  ? theme.colorScheme.errorContainer
+                  : theme.colorScheme.surfaceContainerLow,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                overlaps.isNotEmpty
+                    ? 'Внимание: комнаты пересекаются (красные рамки). '
+                        'Разведите их, чтобы можно было сохранить.'
+                    : (isRoomsMode
+                        ? (selectedIsRoom
+                            ? 'Тяните за тело — переместить, за уголки — '
+                                'изменить размер. Привязка к сетке 0.1 м. '
+                                'После сохранения двери и окна пересчитаются.'
+                            : 'Коснитесь комнаты, чтобы выделить. '
+                                'Лестница и коридор не редактируются вручную.')
+                        : (selectedOpening != null
+                            ? 'Тяните за тело — двигать вдоль стены, '
+                                'за концы — менять длину. Привязка к 0.1 м. '
+                                'Ручная правка отключает автоперерасчёт.'
+                            : 'Коснитесь двери или окна, чтобы выделить. '
+                                'Кнопками сверху можно добавить новые.')),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: overlaps.isNotEmpty
+                      ? theme.colorScheme.onErrorContainer
+                      : null,
+                ),
+              ),
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final size =
+                      Size(constraints.maxWidth, constraints.maxHeight);
+                  final t = FloorPlanTransform.compute(
+                    size: size,
+                    plan: _plan,
+                    padding: _padding,
+                  );
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onPanDown: (d) => _onPanStart(d.localPosition, t),
+                    onPanUpdate: (d) => _onPanUpdate(d.localPosition, t),
+                    onPanEnd: (_) => _onPanEnd(),
+                    onPanCancel: _onPanEnd,
+                    onTapDown: (d) {
+                      _onPanStart(d.localPosition, t);
+                      _onPanEnd();
+                    },
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: FloorPlanView(plan: _plan, padding: _padding),
+                        ),
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: CustomPaint(
+                              painter: _SelectionOverlayPainter(
+                                plan: _plan,
+                                selectedIndex:
+                                    isRoomsMode ? _selectedIndex : null,
+                                selectedOpeningIndex:
+                                    !isRoomsMode ? _selectedOpening : null,
+                                overlapping: overlaps,
+                                padding: _padding,
+                                accent: theme.colorScheme.primary,
+                                error: theme.colorScheme.error,
+                                handleFill: theme.colorScheme.surface,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-          if (selectedIsRoom) _buildInfoBar(theme),
-          if (selectedOpening != null)
-            _buildOpeningInfoBar(theme, selectedOpening),
-        ],
+            if (selectedIsRoom) _buildInfoBar(theme),
+            if (selectedOpening != null)
+              _buildOpeningInfoBar(theme, selectedOpening),
+          ],
+        ),
       ),
     );
   }

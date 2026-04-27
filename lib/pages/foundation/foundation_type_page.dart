@@ -67,28 +67,33 @@ class FoundationTypePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  'Выберите тип фундамента',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      body: HintAutoShow(
+        screenKey: 'foundation-type',
+        title: 'Параметры фундамента',
+        sections: Hints.foundationWizard,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Выберите тип фундамента',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
                 ),
-              ),
-              for (final type in FoundationType.values) ...[
-                _FoundationTypeCard(
-                  type: type,
-                  selected: selectedType == type,
-                  onTap: () => _selectType(context, type),
-                ),
-                const SizedBox(height: 8),
+                for (final type in FoundationType.values) ...[
+                  _FoundationTypeCard(
+                    type: type,
+                    selected: selectedType == type,
+                    onTap: () => _selectType(context, type),
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -121,8 +126,7 @@ class _FoundationTypeCard extends StatelessWidget {
         ),
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         title: Text(type.title, style: theme.textTheme.titleMedium),
         subtitle: Text(type.description),
         trailing: const Icon(Icons.chevron_right),

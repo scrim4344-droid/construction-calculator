@@ -104,23 +104,28 @@ class DrawingsPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: batches.length,
-            itemBuilder: (context, i) {
-              final batch = batches[i];
-              return _BatchCard(
-                index: batches.length - i,
-                createdAt: batch.first.createdAt,
-                drawings: batch,
-                isLatest: i == 0,
-                project: project,
-                canEdit: canEdit,
-              );
-            },
+      body: HintAutoShow(
+        screenKey: 'drawings',
+        title: 'Чертежи',
+        sections: Hints.drawings,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: batches.length,
+              itemBuilder: (context, i) {
+                final batch = batches[i];
+                return _BatchCard(
+                  index: batches.length - i,
+                  createdAt: batch.first.createdAt,
+                  drawings: batch,
+                  isLatest: i == 0,
+                  project: project,
+                  canEdit: canEdit,
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -130,8 +135,7 @@ class DrawingsPage extends StatelessWidget {
   List<List<Drawing>> _groupByBatch(List<Drawing> drawings) {
     final batches = <List<Drawing>>[];
     for (final d in drawings) {
-      if (batches.isEmpty ||
-          batches.last.first.createdAt != d.createdAt) {
+      if (batches.isEmpty || batches.last.first.createdAt != d.createdAt) {
         batches.add([d]);
       } else {
         batches.last.add(d);
@@ -209,15 +213,15 @@ class _BatchCardState extends State<_BatchCard> {
                               Chip(
                                 label: const Text('текущая'),
                                 visualDensity: VisualDensity.compact,
-                                backgroundColor: theme
-                                    .colorScheme.primaryContainer,
+                                backgroundColor:
+                                    theme.colorScheme.primaryContainer,
                               ),
                             if (widget.drawings.any((d) => d.isManualEdit))
                               Chip(
                                 label: const Text('ручная правка'),
                                 visualDensity: VisualDensity.compact,
-                                backgroundColor: theme
-                                    .colorScheme.tertiaryContainer,
+                                backgroundColor:
+                                    theme.colorScheme.tertiaryContainer,
                               ),
                           ],
                         ),
@@ -243,8 +247,7 @@ class _BatchCardState extends State<_BatchCard> {
                     icon: Icon(
                       _expanded ? Icons.expand_less : Icons.expand_more,
                     ),
-                    onPressed: () =>
-                        setState(() => _expanded = !_expanded),
+                    onPressed: () => setState(() => _expanded = !_expanded),
                   ),
                 ],
               ),
@@ -256,8 +259,7 @@ class _BatchCardState extends State<_BatchCard> {
             alignment: Alignment.topCenter,
             child: _expanded
                 ? Padding(
-                    padding:
-                        const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -348,8 +350,7 @@ class _BatchCardState extends State<_BatchCard> {
       if (plan == null) continue;
       final dxf = DxfWriter.write(
         plan,
-        title:
-            '${widget.project.name} · ${plan.floorLabel} · v${widget.index}',
+        title: '${widget.project.name} · ${plan.floorLabel} · v${widget.index}',
       );
       final filename = _safeFileName(
         '${widget.project.name}_v${widget.index}_${plan.floorLabel}',

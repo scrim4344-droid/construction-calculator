@@ -10,7 +10,8 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mode = context.watch<AppState>().mode;
+    final state = context.watch<AppState>();
+    final mode = state.mode;
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
       body: ListView(
@@ -26,6 +27,18 @@ class SettingsPage extends StatelessWidget {
                 builder: (_) => const ModeSelectionPage(canGoBack: true),
               ),
             ),
+          ),
+          const Divider(),
+          SwitchListTile(
+            secondary: const Icon(Icons.lightbulb_outline),
+            title: const Text('Показывать обучающие подсказки'),
+            subtitle: const Text(
+              'Авто-диалог с подсказкой при первом открытии каждого экрана '
+              'в текущей сессии. Иконка «?» в углу остаётся доступной всегда.',
+            ),
+            isThreeLine: true,
+            value: state.hintsEnabled,
+            onChanged: (v) => state.setHintsEnabled(v),
           ),
           const Divider(),
           const ListTile(

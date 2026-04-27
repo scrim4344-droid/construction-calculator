@@ -25,6 +25,7 @@ class AppState extends ChangeNotifier {
   })  : _settings = settingsRepository,
         _projects = projectRepository {
     _mode = _settings.loadMode();
+    _hintsEnabled = _settings.loadHintsEnabled();
     _projectList = _projects.loadAll();
   }
 
@@ -35,8 +36,41 @@ class AppState extends ChangeNotifier {
   UserMode? _mode;
   List<HouseProject> _projectList = [];
 
+  /// Глобальный флаг автопоказа обучающих подсказок. Сохраняется в
+  /// SharedPreferences. Сбрасывать «показано в этой сессии» отдельно нет
+  /// смысла — это in-memory множество [_hintsShownThisSession].
+  bool _hintsEnabled = true;
+
+  /// Множество ключей экранов, чьи подсказки уже автоматически
+  /// показывались в текущей сессии браузера/приложения. Перезагрузка
+  /// страницы сбрасывает множество — это и есть «вести нового
+  /// пользователя за руку при каждом заходе».
+  final Set<String> _hintsShownThisSession = {};
+
   UserMode? get mode => _mode;
   bool get hasMode => _mode != null;
+
+  bool get hintsEnabled => _hintsEnabled;
+
+  Future<void> setHintsEnabled(bool value) async {
+    if (_hintsEnabled == value) return;
+    _hintsEnabled = value;
+    await _settings.saveHintsEnabled(value);
+    notifyListeners();
+  }
+
+  /// Должен ли экран `key` автоматически показать свою подсказку при
+  /// открытии. `true`, только если автопоказ включён глобально и в этой
+  /// сессии этот экран ещё не показывал подсказку.
+  bool shouldAutoShowHint(String key) {
+    return _hintsEnabled && !_hintsShownThisSession.contains(key);
+  }
+
+  /// Пометить, что подсказка экрана `key` уже была показана в этой
+  /// сессии — больше не выпрыгивать при возврате на тот же экран.
+  void markHintShown(String key) {
+    _hintsShownThisSession.add(key);
+  }
 
   List<HouseProject> get projects =>
       List.unmodifiable(_projectList..sort(_byUpdatedDesc));

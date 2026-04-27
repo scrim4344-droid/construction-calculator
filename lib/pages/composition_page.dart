@@ -80,146 +80,151 @@ class CompositionPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              if (!briefStarted)
-                Card(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: theme.colorScheme.outline,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Сначала заполните бриф клиента — состав '
-                            'сооружения подберётся автоматически на его основе.',
-                            style: theme.textTheme.bodyMedium,
+      body: HintAutoShow(
+        screenKey: 'composition',
+        title: 'Состав сооружения',
+        sections: Hints.composition,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                if (!briefStarted)
+                  Card(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: theme.colorScheme.outline,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Сначала заполните бриф клиента — состав '
+                              'сооружения подберётся автоматически на его основе.',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  Card(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isClient
+                                ? 'Решения подобраны автоматически по брифу'
+                                : 'Решения подобраны автоматически — можно править',
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isClient
+                                ? 'Состав сооружения сформирован программой '
+                                    'на основе ваших пожеланий и не редактируется. '
+                                    'Если хотите внести правки — обратитесь к '
+                                    'проектировщику.'
+                                : 'Изменяйте элементы по необходимости. После '
+                                    'правок нажмите «Перегенерировать чертежи» — '
+                                    'старые версии останутся в истории.',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                )
-              else
-                Card(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isClient
-                              ? 'Решения подобраны автоматически по брифу'
-                              : 'Решения подобраны автоматически — можно править',
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isClient
-                              ? 'Состав сооружения сформирован программой '
-                                  'на основе ваших пожеланий и не редактируется. '
-                                  'Если хотите внести правки — обратитесь к '
-                                  'проектировщику.'
-                              : 'Изменяйте элементы по необходимости. После '
-                                  'правок нажмите «Перегенерировать чертежи» — '
-                                  'старые версии останутся в истории.',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 16),
-              _ElementCard(
-                title: 'Фундамент',
-                subtitle: project.foundation.summary,
-                done: project.foundation.isFilled,
-                icon: Icons.foundation_outlined,
-                readonly: isClient,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        FoundationTypePage(projectId: project.id),
-                  ),
-                ),
-              ),
-              if (!isClient && briefStarted) _RationaleCard(
-                rationale: CompositionPlanner.plan(project.brief)
-                    .foundationRationale,
-              ),
-              const SizedBox(height: 8),
-              _ElementCard(
-                title: 'Стены',
-                subtitle: project.walls.summary,
-                done: project.walls.isFilled,
-                icon: Icons.view_week_outlined,
-                readonly: isClient,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => WallsPage(projectId: project.id),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _ElementCard(
-                title: 'Крыша',
-                subtitle: project.roof.summary,
-                done: project.roof.isFilled,
-                icon: Icons.roofing_outlined,
-                readonly: isClient,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RoofPage(projectId: project.id),
-                  ),
-                ),
-              ),
-              if (project.includesStaircase) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 _ElementCard(
-                  title: 'Лестница',
-                  subtitle: project.staircase.summary,
-                  done: project.staircase.isFilled,
-                  icon: Icons.stairs_outlined,
+                  title: 'Фундамент',
+                  subtitle: project.foundation.summary,
+                  done: project.foundation.isFilled,
+                  icon: Icons.foundation_outlined,
                   readonly: isClient,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => StaircasePage(projectId: project.id),
+                      builder: (_) => FoundationTypePage(projectId: project.id),
                     ),
                   ),
                 ),
-              ],
-              if (!isClient && briefStarted) ...[
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                if (!isClient && briefStarted)
+                  _RationaleCard(
+                    rationale: CompositionPlanner.plan(project.brief)
+                        .foundationRationale,
                   ),
-                  onPressed: () => _regenerate(context, project),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Перегенерировать чертежи'),
+                const SizedBox(height: 8),
+                _ElementCard(
+                  title: 'Стены',
+                  subtitle: project.walls.summary,
+                  done: project.walls.isFilled,
+                  icon: Icons.view_week_outlined,
+                  readonly: isClient,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => WallsPage(projectId: project.id),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: () => _resetToAuto(context, project),
-                  icon: const Icon(Icons.auto_fix_high_outlined),
-                  label: const Text('Сбросить к рекомендации по брифу'),
+                _ElementCard(
+                  title: 'Крыша',
+                  subtitle: project.roof.summary,
+                  done: project.roof.isFilled,
+                  icon: Icons.roofing_outlined,
+                  readonly: isClient,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RoofPage(projectId: project.id),
+                    ),
+                  ),
                 ),
+                if (project.includesStaircase) ...[
+                  const SizedBox(height: 8),
+                  _ElementCard(
+                    title: 'Лестница',
+                    subtitle: project.staircase.summary,
+                    done: project.staircase.isFilled,
+                    icon: Icons.stairs_outlined,
+                    readonly: isClient,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => StaircasePage(projectId: project.id),
+                      ),
+                    ),
+                  ),
+                ],
+                if (!isClient && briefStarted) ...[
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed: () => _regenerate(context, project),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Перегенерировать чертежи'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => _resetToAuto(context, project),
+                    icon: const Icon(Icons.auto_fix_high_outlined),
+                    label: const Text('Сбросить к рекомендации по брифу'),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -285,8 +290,7 @@ class _RationaleCardState extends State<_RationaleCard> {
               alignment: Alignment.topCenter,
               child: _expanded
                   ? Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -392,8 +396,7 @@ class _ElementCard extends StatelessWidget {
           );
     return Card(
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Icon(icon, color: theme.colorScheme.primary),
         title: Text(title, style: theme.textTheme.titleMedium),
         subtitle: Text(subtitle),

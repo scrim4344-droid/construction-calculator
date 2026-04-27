@@ -98,47 +98,51 @@ class _BriefWizardPageState extends State<BriefWizardPage> {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: Column(
-            children: [
-              LinearProgressIndicator(value: (_step + 1) / _stepsCount),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: _buildStep(context, project, brief),
-                ),
-              ),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Row(
-                    children: [
-                      OutlinedButton(
-                        onPressed: _step == 0
-                            ? null
-                            : () => setState(() => _step--),
-                        child: const Text('Назад'),
-                      ),
-                      const Spacer(),
-                      FilledButton(
-                        onPressed: () async {
-                          await _save(context, project);
-                          if (!context.mounted) return;
-                          if (isLast) {
-                            await _finish(context, project);
-                          } else {
-                            setState(() => _step++);
-                          }
-                        },
-                        child: Text(isLast ? 'Завершить' : 'Далее'),
-                      ),
-                    ],
+      body: HintAutoShow(
+        screenKey: 'brief-wizard',
+        title: 'Бриф клиента',
+        sections: Hints.briefWizard,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              children: [
+                LinearProgressIndicator(value: (_step + 1) / _stepsCount),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildStep(context, project, brief),
                   ),
                 ),
-              ),
-            ],
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Row(
+                      children: [
+                        OutlinedButton(
+                          onPressed:
+                              _step == 0 ? null : () => setState(() => _step--),
+                          child: const Text('Назад'),
+                        ),
+                        const Spacer(),
+                        FilledButton(
+                          onPressed: () async {
+                            await _save(context, project);
+                            if (!context.mounted) return;
+                            if (isLast) {
+                              await _finish(context, project);
+                            } else {
+                              setState(() => _step++);
+                            }
+                          },
+                          child: Text(isLast ? 'Завершить' : 'Далее'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -153,7 +157,8 @@ class _BriefWizardPageState extends State<BriefWizardPage> {
     final mode = context.read<AppState>().mode ?? UserMode.client;
     switch (_step) {
       case 0:
-        return _RegionStep(brief: brief, mode: mode, onChanged: () => setState(() {}));
+        return _RegionStep(
+            brief: brief, mode: mode, onChanged: () => setState(() {}));
       case 1:
         return _SoilStep(
           brief: brief,
@@ -479,9 +484,7 @@ class _SoilLayerCardState extends State<_SoilLayerCard> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
                   children: [
-                    Icon(_expanded
-                        ? Icons.expand_less
-                        : Icons.expand_more),
+                    Icon(_expanded ? Icons.expand_less : Icons.expand_more),
                     const SizedBox(width: 4),
                     Text(
                       _expanded
@@ -905,9 +908,8 @@ class _RoomsStep extends StatelessWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: _count(k) <= 0
-                      ? null
-                      : () => _set(k, _count(k) - 1),
+                  onPressed:
+                      _count(k) <= 0 ? null : () => _set(k, _count(k) - 1),
                 ),
                 SizedBox(
                   width: 28,

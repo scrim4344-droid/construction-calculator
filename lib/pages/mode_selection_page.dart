@@ -32,41 +32,46 @@ class ModeSelectionPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            shrinkWrap: true,
-            children: [
-              const SizedBox(height: 8),
-              Text(
-                'Выберите режим работы приложения',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'От режима зависит уровень детализации интерфейса и состав '
-                'выходных документов.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              for (final mode in UserMode.values) ...[
-                _ModeCard(
-                  mode: mode,
-                  selected: state.mode == mode,
-                  onTap: () async {
-                    await state.setMode(mode);
-                    if (canGoBack && context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  },
+      body: HintAutoShow(
+        screenKey: 'mode-selection',
+        title: 'Выбор режима',
+        sections: Hints.modeSelection,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              shrinkWrap: true,
+              children: [
+                const SizedBox(height: 8),
+                Text(
+                  'Выберите режим работы приложения',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleLarge,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                Text(
+                  'От режима зависит уровень детализации интерфейса и состав '
+                  'выходных документов.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 24),
+                for (final mode in UserMode.values) ...[
+                  _ModeCard(
+                    mode: mode,
+                    selected: state.mode == mode,
+                    onTap: () async {
+                      await state.setMode(mode);
+                      if (canGoBack && context.mounted) {
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

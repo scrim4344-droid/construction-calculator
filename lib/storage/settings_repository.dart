@@ -9,6 +9,7 @@ import '../models/user_mode.dart';
 /// измерения, регион по умолчанию и т. п.).
 class SettingsRepository {
   static const _modeKey = 'user_mode';
+  static const _hintsEnabledKey = 'hints_enabled';
 
   final SharedPreferences _prefs;
 
@@ -29,5 +30,17 @@ class SettingsRepository {
 
   Future<void> saveMode(UserMode mode) async {
     await _prefs.setString(_modeKey, mode.name);
+  }
+
+  /// Включён ли автопоказ обучающих подсказок. По умолчанию — да: новый
+  /// пользователь получает «экскурсию» по каждому экрану. Сохранённое
+  /// `false` означает «пользователь сам отключил» — больше не подсказывать
+  /// автоматически, но кнопка «?» в AppBar остаётся доступной.
+  bool loadHintsEnabled() {
+    return _prefs.getBool(_hintsEnabledKey) ?? true;
+  }
+
+  Future<void> saveHintsEnabled(bool value) async {
+    await _prefs.setBool(_hintsEnabledKey, value);
   }
 }

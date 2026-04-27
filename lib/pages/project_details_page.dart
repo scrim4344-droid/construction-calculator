@@ -53,74 +53,78 @@ class ProjectDetailsPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Card(
-                color: theme.colorScheme.surfaceContainerHighest,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        project.constructionType.title,
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Заполните разделы по очереди — каждый раздел можно '
-                        'править в любой момент.',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
+      body: HintAutoShow(
+        screenKey: 'project-details',
+        title: 'Структура проекта',
+        sections: Hints.projectDetails,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Card(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          project.constructionType.title,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Заполните разделы по очереди — каждый раздел можно '
+                          'править в любой момент.',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              _SectionCard(
-                title: 'Бриф клиента',
-                subtitle: project.brief.summary,
-                done: project.brief.isStarted,
-                icon: Icons.assignment_outlined,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BriefPage(projectId: project.id),
+                const SizedBox(height: 16),
+                _SectionCard(
+                  title: 'Бриф клиента',
+                  subtitle: project.brief.summary,
+                  done: project.brief.isStarted,
+                  icon: Icons.assignment_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BriefPage(projectId: project.id),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              _SectionCard(
-                title: 'Состав сооружения',
-                subtitle: _compositionSubtitle(project),
-                done: compositionFilled,
-                icon: Icons.account_tree_outlined,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        CompositionPage(projectId: project.id),
+                const SizedBox(height: 8),
+                _SectionCard(
+                  title: 'Состав сооружения',
+                  subtitle: _compositionSubtitle(project),
+                  done: compositionFilled,
+                  icon: Icons.account_tree_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CompositionPage(projectId: project.id),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              _SectionCard(
-                title: 'Чертежи',
-                subtitle: project.drawings.summary,
-                done: !project.drawings.isEmpty,
-                icon: Icons.draw_outlined,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DrawingsPage(projectId: project.id),
+                const SizedBox(height: 8),
+                _SectionCard(
+                  title: 'Чертежи',
+                  subtitle: project.drawings.summary,
+                  done: !project.drawings.isEmpty,
+                  icon: Icons.draw_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DrawingsPage(projectId: project.id),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -160,8 +164,7 @@ class _SectionCard extends StatelessWidget {
     final theme = Theme.of(context);
     return Card(
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Icon(icon, color: theme.colorScheme.primary),
         title: Text(title, style: theme.textTheme.titleMedium),
         subtitle: Text(subtitle),

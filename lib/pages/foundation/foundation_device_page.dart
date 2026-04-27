@@ -75,58 +75,62 @@ class _FoundationDevicePageState extends State<FoundationDevicePage> {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  'Выберите устройство фундамента',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-              for (final d in devices)
-                RadioListTile<FoundationDevice>(
-                  value: d,
-                  groupValue: foundation.device,
-                  onChanged: (value) {
-                    if (value != null) _selectDevice(value);
-                  },
-                  title: Text(d.title),
-                ),
-              if (type == FoundationType.pileWithGrillage) ...[
-                const Divider(height: 32),
+      body: HintAutoShow(
+        screenKey: 'foundation-device',
+        title: 'Параметры фундамента',
+        sections: Hints.foundationWizard,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: EdgeInsets.symmetric(vertical: 8),
                   child: Text(
-                    'Материал ростверка',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    'Выберите устройство фундамента',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                 ),
-                for (final g in GrillageMaterial.values)
-                  RadioListTile<GrillageMaterial>(
-                    value: g,
-                    groupValue: foundation.grillageMaterial,
+                for (final d in devices)
+                  RadioListTile<FoundationDevice>(
+                    value: d,
+                    groupValue: foundation.device,
                     onChanged: (value) {
-                      if (value != null) _selectGrillage(value);
+                      if (value != null) _selectDevice(value);
                     },
-                    title: Text(g.title),
+                    title: Text(d.title),
                   ),
-              ],
-              const SizedBox(height: 24),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                if (type == FoundationType.pileWithGrillage) ...[
+                  const Divider(height: 32),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: Text(
+                      'Материал ростверка',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  for (final g in GrillageMaterial.values)
+                    RadioListTile<GrillageMaterial>(
+                      value: g,
+                      groupValue: foundation.grillageMaterial,
+                      onChanged: (value) {
+                        if (value != null) _selectGrillage(value);
+                      },
+                      title: Text(g.title),
+                    ),
+                ],
+                const SizedBox(height: 24),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  onPressed: isComplete ? () => Navigator.pop(context) : null,
+                  child: const Text('Сохранить выбор'),
                 ),
-                onPressed:
-                    isComplete ? () => Navigator.pop(context) : null,
-                child: const Text('Сохранить выбор'),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
