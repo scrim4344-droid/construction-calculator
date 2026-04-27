@@ -78,7 +78,10 @@ class PermanentLoadCalculator {
     ),
   };
 
-  static CalcResult sum(List<WeightComponent> components) {
+  static CalcResult sum(
+    List<WeightComponent> components, {
+    String componentsOrigin = 'Из брифа: материал стен и кровли',
+  }) {
     final total = components.fold<double>(0, (a, c) => a + c.weightKnPerM2);
     final steps = <CalcStep>[
       for (final c in components)
@@ -89,6 +92,15 @@ class PermanentLoadCalculator {
           result: c.weightKnPerM2,
           unit: 'кН/м²',
           reference: c.reference,
+          inputs: [
+            CalcInput(
+              symbol: 'gi',
+              value: '${c.weightKnPerM2} кН/м²',
+              origin: '$componentsOrigin → подобран компонент «${c.title}». '
+                  'Каталожное значение с учётом γf = 1.1 (СП 20, табл. 7.1).',
+              reference: c.reference,
+            ),
+          ],
         ),
       CalcStep(
         title: 'Сумма постоянных нагрузок',
@@ -98,6 +110,15 @@ class PermanentLoadCalculator {
         result: total,
         unit: 'кН/м²',
         reference: 'СП 20.13330.2016, разд. 7',
+        inputs: [
+          for (final c in components)
+            CalcInput(
+              symbol: 'g_${c.title.split(' ').first.toLowerCase()}',
+              value: '${c.weightKnPerM2} кН/м²',
+              origin: c.title,
+              reference: c.reference,
+            ),
+        ],
       ),
     ];
     return CalcResult(value: total, steps: steps);

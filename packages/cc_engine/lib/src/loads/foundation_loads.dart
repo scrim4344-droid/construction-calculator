@@ -34,20 +34,43 @@ class FoundationLoadsCalculator {
     required List<WeightComponent> roofComponents,
     required int floors,
     double usefulLoad = residentialUsefulLoad,
+    String snowRegionOrigin = 'Принято по умолчанию',
+    String windRegionOrigin = 'Принято по умолчанию',
+    String roofSlopeOrigin =
+        'Из проекта: уклон кровли (если не задан — 30° по умолчанию)',
+    String floorsOrigin = 'Из брифа, поле «Этажность»',
+    String wallsOrigin = 'Из брифа, поле «Материал стен»',
+    String floorsCompOrigin =
+        'По умолчанию: деревянное перекрытие по балкам (типичная замена в ИЖС)',
+    String roofMaterialOrigin =
+        'Из модели крыши проекта (поле roofingMaterial)',
+    String buildingHeightOrigin =
+        'Грубая оценка: floors · 3 м + 2 м на крышу',
   }) {
     final snow = SnowLoadCalculator.calculate(
       region: snowRegion,
       roofShape: roofShape,
       slopeDegrees: roofSlopeDegrees,
+      regionOrigin: snowRegionOrigin,
     );
     final wind = WindLoadCalculator.calculate(
       region: windRegion,
       terrain: windTerrain,
       heightMeters: buildingHeight,
+      regionOrigin: windRegionOrigin,
+      heightOrigin: buildingHeightOrigin,
     );
-    final perFloorWalls = PermanentLoadCalculator.sum(wallComponents).value;
-    final perFloorFloors = PermanentLoadCalculator.sum(floorComponents).value;
-    final roof = PermanentLoadCalculator.sum(roofComponents).value;
+    final perFloorWalls =
+        PermanentLoadCalculator.sum(wallComponents, componentsOrigin: wallsOrigin)
+            .value;
+    final perFloorFloors = PermanentLoadCalculator.sum(
+      floorComponents,
+      componentsOrigin: floorsCompOrigin,
+    ).value;
+    final roof = PermanentLoadCalculator.sum(
+      roofComponents,
+      componentsOrigin: roofMaterialOrigin,
+    ).value;
 
     final permanent = perFloorWalls * floors +
         perFloorFloors * floors +
@@ -73,6 +96,18 @@ class FoundationLoadsCalculator {
           result: perFloorWalls * floors,
           unit: 'кН/м²',
           reference: 'СП 20.13330.2016, разд. 7',
+          inputs: [
+            CalcInput(
+              symbol: 'gw',
+              value: '$perFloorWalls кН/м²',
+              origin: 'Из шага «Сумма постоянных нагрузок» по стенам.',
+            ),
+            CalcInput(
+              symbol: 'n',
+              value: '$floors',
+              origin: floorsOrigin,
+            ),
+          ],
         ),
         CalcStep(
           title: 'Постоянная нагрузка от перекрытий',
@@ -82,6 +117,18 @@ class FoundationLoadsCalculator {
           result: perFloorFloors * floors,
           unit: 'кН/м²',
           reference: 'СП 20.13330.2016, разд. 7',
+          inputs: [
+            CalcInput(
+              symbol: 'gf',
+              value: '$perFloorFloors кН/м²',
+              origin: 'Из шага «Сумма постоянных нагрузок» по перекрытиям.',
+            ),
+            CalcInput(
+              symbol: 'n',
+              value: '$floors',
+              origin: floorsOrigin,
+            ),
+          ],
         ),
         CalcStep(
           title: 'Постоянная нагрузка от кровли',
@@ -90,6 +137,14 @@ class FoundationLoadsCalculator {
           result: roof,
           unit: 'кН/м²',
           reference: 'СП 20.13330.2016, разд. 7',
+          inputs: [
+            CalcInput(
+              symbol: 'gr',
+              value: '$roof кН/м²',
+              origin: 'Из шага «Сумма постоянных нагрузок» по кровле. '
+                  'Кровля одна на всё здание, поэтому не умножается на n.',
+            ),
+          ],
         ),
         CalcStep(
           title: 'Полезная нагрузка',
@@ -98,14 +153,35 @@ class FoundationLoadsCalculator {
           result: useful,
           unit: 'кН/м²',
           reference: 'СП 20.13330.2016, табл. 8.3 (жилые помещения)',
+          inputs: [
+            CalcInput(
+              symbol: 'p',
+              value: '$usefulLoad кН/м²',
+              origin: 'Расчётное значение полезной нагрузки для жилых '
+                  'помещений: нормативное 1.5 кН/м² × γf = 1.3 = 1.95.',
+              reference: 'СП 20.13330.2016, табл. 8.3',
+            ),
+            CalcInput(
+              symbol: 'n',
+              value: '$floors',
+              origin: floorsOrigin,
+            ),
+          ],
         ),
         CalcStep(
-          title: 'Снеговая нагрузка',
+          title: 'Снеговая нагрузка (итог)',
           formula: 'S',
           substitution: '${snow.value}',
           result: snow.value,
           unit: 'кН/м²',
           reference: 'См. раздел «Снеговая нагрузка»',
+          inputs: [
+            CalcInput(
+              symbol: 'S',
+              value: '${_round(snow.value)} кН/м²',
+              origin: 'Из расчёта снеговой нагрузки выше.',
+            ),
+          ],
         ),
         CalcStep(
           title: 'Суммарная вертикальная нагрузка на фундамент',
@@ -118,6 +194,23 @@ class FoundationLoadsCalculator {
           note: 'Без учёта ветровой составляющей — она не суммируется в '
               'вертикальную нагрузку для подбора подошвы (используется '
               'отдельно при расчёте анкеровки и опрокидывания).',
+          inputs: [
+            CalcInput(
+              symbol: 'g · n',
+              value: '${_round(permanent)} кН/м²',
+              origin: 'Сумма постоянных нагрузок (стены + перекрытия + кровля).',
+            ),
+            CalcInput(
+              symbol: 'p · n',
+              value: '${_round(useful)} кН/м²',
+              origin: 'Полезная нагрузка × этажность.',
+            ),
+            CalcInput(
+              symbol: 'S',
+              value: '${_round(snow.value)} кН/м²',
+              origin: 'Снеговая нагрузка.',
+            ),
+          ],
         ),
       ],
     );

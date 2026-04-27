@@ -29,10 +29,15 @@ class SnowLoadCalculator {
   ///        снеговой нагрузке на кровлю (зависит от формы кровли);
   ///   Sg — расчётный вес снегового покрова на 1 м² (СП 20, табл. 10.1);
   ///   γf — коэффициент надёжности по нагрузке (1.4 по п. 10.12).
+  ///
+  /// `regionOrigin` — текстовое описание, откуда взят `region` (например,
+  /// «Из брифа: «Регион → Москва» → III снеговой район по карте 1
+  /// прил. Е СП 20»). Это попадает в `CalcInput.origin` и видно в UI.
   static CalcResult calculate({
     required SnowRegion region,
     required RoofShape roofShape,
     required double slopeDegrees,
+    String regionOrigin = 'Принято по умолчанию',
   }) {
     final mu = _muForRoof(roofShape, slopeDegrees);
     final s = mu * region.sg * gammaFsnow;
@@ -48,6 +53,14 @@ class SnowLoadCalculator {
           unit: 'кН/м²',
           reference: 'СП 20.13330.2016, табл. 10.1, ${region.title}',
           note: 'Принят по карте 1 приложения Е для выбранного региона.',
+          inputs: [
+            CalcInput(
+              symbol: 'Sg',
+              value: '${region.sg} кН/м²',
+              origin: regionOrigin,
+              reference: 'СП 20.13330.2016, табл. 10.1',
+            ),
+          ],
         ),
         CalcStep(
           title: 'Коэффициент формы кровли µ',
@@ -57,6 +70,21 @@ class SnowLoadCalculator {
           unit: '—',
           reference: 'СП 20.13330.2016, прил. Б, схема Б.1',
           note: _muNote(roofShape, slopeDegrees),
+          inputs: [
+            CalcInput(
+              symbol: 'α',
+              value: '$slopeDegrees°',
+              origin: 'Из проекта: уклон кровли (заполняется в брифе или '
+                  'на странице кровли). Если не задан — 30° по умолчанию.',
+            ),
+            CalcInput(
+              symbol: 'µ',
+              value: '$mu',
+              origin: 'Получен по форме кровли и углу α: '
+                  '${_muOrigin(roofShape, slopeDegrees)}',
+              reference: 'СП 20.13330.2016, прил. Б, схема Б.1',
+            ),
+          ],
         ),
         CalcStep(
           title: 'Снеговая нагрузка S',
@@ -66,6 +94,26 @@ class SnowLoadCalculator {
           result: s,
           unit: 'кН/м²',
           reference: 'СП 20.13330.2016, п. 10.1, формула (10.1)',
+          inputs: [
+            CalcInput(
+              symbol: 'µ',
+              value: '$mu',
+              origin: 'Из шага «Коэффициент формы кровли µ» выше.',
+            ),
+            CalcInput(
+              symbol: 'Sg',
+              value: '${region.sg} кН/м²',
+              origin: regionOrigin,
+              reference: 'СП 20.13330.2016, табл. 10.1',
+            ),
+            CalcInput(
+              symbol: 'γf',
+              value: '$gammaFsnow',
+              origin: 'Константа: коэффициент надёжности по снеговой '
+                  'нагрузке для расчёта по I группе предельных состояний.',
+              reference: 'СП 20.13330.2016, п. 10.12',
+            ),
+          ],
         ),
       ],
     );
@@ -95,6 +143,18 @@ class SnowLoadCalculator {
             'и 0 при 60°.';
       case RoofShape.steep:
         return 'Крутая кровля (α ≥ 60°), снег не задерживается, µ = 0.';
+    }
+  }
+
+  static String _muOrigin(RoofShape shape, double slopeDeg) {
+    switch (shape) {
+      case RoofShape.flatOrLowSlope:
+        return 'плоская/малоуклонная (α ≤ 30°) ⇒ µ = 1.0';
+      case RoofShape.gable:
+        return 'двускатная (30° < α < 60°), линейная интерполяция между '
+            '1.0 (при 30°) и 0 (при 60°)';
+      case RoofShape.steep:
+        return 'крутая (α ≥ 60°), снег не задерживается ⇒ µ = 0';
     }
   }
 

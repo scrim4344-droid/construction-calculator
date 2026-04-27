@@ -7,7 +7,9 @@ import '../../models/client_brief.dart';
 import '../../models/house_project.dart';
 import '../../models/roof_design.dart';
 import '../../state/app_state.dart';
+import '../../widgets/calc_steps_card.dart';
 import '../../widgets/hints.dart';
+import 'foundation_design_page.dart';
 
 /// Расчёт нагрузок на фундамент по СП 20.13330.2016.
 ///
@@ -142,6 +144,7 @@ class _LoadsContent extends StatelessWidget {
     final snow = SnowRegion.byId(brief.snowZone!);
     final wind = _windFromBrief(brief.windZone) ?? WindRegion.byId(2);
     final roofShape = _detectRoofShape(project.roof);
+    final regionLabel = brief.region ?? '—';
     final result = FoundationLoadsCalculator.compute(
       snowRegion: snow,
       windRegion: wind,
@@ -153,6 +156,21 @@ class _LoadsContent extends StatelessWidget {
       floorComponents: _floorsFromBrief(),
       roofComponents: _roofFromBrief(project.roof),
       floors: brief.floors ?? 1,
+      snowRegionOrigin:
+          'Из брифа: «Регион → $regionLabel» → ${snow.title} (карта 1, прил. Е СП 20)',
+      windRegionOrigin:
+          'Из брифа: «Регион → $regionLabel» → ${wind.title} (карта 2, прил. Е СП 20)',
+      floorsOrigin:
+          'Из брифа, шаг «Этажность» (значение: ${brief.floors} эт.)',
+      wallsOrigin:
+          'Из брифа, шаг «Материал стен» (выбор: ${brief.wallMaterial?.title ?? "—"})',
+      floorsCompOrigin:
+          'По умолчанию: деревянное перекрытие по балкам. На странице кровли/перекрытий можно поменять.',
+      roofMaterialOrigin: project.roof.roofingMaterial != null
+          ? 'Из проекта: материал кровли «${project.roof.roofingMaterial}»'
+          : 'По умолчанию: металлочерепица (если не задано в проекте)',
+      buildingHeightOrigin:
+          'Грубая оценка по этажности: ${brief.floors} · 3 м + 2 м на крышу = ${_estimateBuildingHeight(brief)} м. Уточняется по разрезам.',
     );
 
     return ListView(
@@ -160,19 +178,19 @@ class _LoadsContent extends StatelessWidget {
       children: [
         _InputDataCard(brief: brief, snow: snow, wind: wind, project: project),
         const SizedBox(height: 16),
-        _StepsCard(
+        CalcStepsCard(
           title: 'Снеговая нагрузка',
           icon: Icons.ac_unit,
           steps: result.snow.steps,
         ),
         const SizedBox(height: 16),
-        _StepsCard(
+        CalcStepsCard(
           title: 'Ветровая нагрузка',
           icon: Icons.air,
           steps: result.wind.steps,
         ),
         const SizedBox(height: 16),
-        _StepsCard(
+        CalcStepsCard(
           title: 'Постоянная и полезная нагрузки + сводка',
           icon: Icons.calculate_outlined,
           steps: result.summary,
@@ -181,6 +199,25 @@ class _LoadsContent extends StatelessWidget {
         _TotalCard(
           totalKnPerM2: result.totalVerticalKnPerM2,
           windKnPerM2: result.wind.value,
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FoundationDesignPage(
+                  projectId: project.id,
+                  totalLoadKnPerM2: result.totalVerticalKnPerM2,
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.architecture_outlined),
+          label: const Text('Подобрать сечение фундамента'),
         ),
         const SizedBox(height: 32),
       ],
@@ -301,86 +338,6 @@ class _InputDataCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StepsCard extends StatelessWidget {
-  const _StepsCard({
-    required this.title,
-    required this.icon,
-    required this.steps,
-  });
-
-  final String title;
-  final IconData icon;
-  final List<CalcStep> steps;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon),
-                const SizedBox(width: 12),
-                Expanded(
-                  child:
-                      Text(title, style: theme.textTheme.titleMedium),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            for (final s in steps) ...[
-              Text(s.title,
-                  style: theme.textTheme.bodyMedium!
-                      .copyWith(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Формула: ${s.formula}',
-                        style: theme.textTheme.bodyMedium),
-                    Text('Подстановка: ${s.substitution}',
-                        style: theme.textTheme.bodyMedium),
-                    Text('Результат: ${s.formattedResult}',
-                        style: theme.textTheme.bodyMedium!
-                            .copyWith(fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-              if (s.reference != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    s.reference!,
-                    style: theme.textTheme.bodySmall!.copyWith(
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ),
-              if (s.note != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(s.note!, style: theme.textTheme.bodySmall),
-                ),
-              const SizedBox(height: 12),
-            ],
-          ],
-        ),
       ),
     );
   }

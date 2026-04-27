@@ -17,4 +17,6 @@ export 'src/loads/snow_load.dart';
 export 'src/loads/wind_load.dart';
 export 'src/loads/permanent_load.dart';
 export 'src/loads/foundation_loads.dart';
+export 'src/foundation/soil_resistance.dart';
+export 'src/foundation/strip_footing.dart';
 export 'src/calc_step.dart';

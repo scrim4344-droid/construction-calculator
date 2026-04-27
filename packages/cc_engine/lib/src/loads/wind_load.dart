@@ -36,6 +36,8 @@ class WindLoadCalculator {
     required TerrainType terrain,
     required double heightMeters,
     double aerodynamicCoefficient = 0.8,
+    String regionOrigin = 'Принято по умолчанию',
+    String heightOrigin = 'Грубая оценка по этажности',
   }) {
     final k = _kForHeight(terrain, heightMeters);
     final wm = region.w0 * k * aerodynamicCoefficient * gammaFwind;
@@ -50,16 +52,47 @@ class WindLoadCalculator {
           result: region.w0,
           unit: 'кН/м²',
           reference: 'СП 20.13330.2016, табл. 11.1, ${region.title}',
+          inputs: [
+            CalcInput(
+              symbol: 'w0',
+              value: '${region.w0} кН/м²',
+              origin: regionOrigin,
+              reference: 'СП 20.13330.2016, табл. 11.1',
+            ),
+          ],
         ),
         CalcStep(
           title: 'Коэффициент по высоте k(z)',
           formula: 'k(z) = f(тип местности, z)',
-          substitution: 'k = $k (z = $heightMeters м, тип ${terrain.name.toUpperCase()})',
+          substitution:
+              'k = $k (z = $heightMeters м, тип ${terrain.name.toUpperCase()})',
           result: k,
           unit: '—',
           reference: 'СП 20.13330.2016, табл. 11.2',
           note: 'Коэффициент учитывает шероховатость подстилающей '
               'поверхности и логарифмический профиль скорости ветра.',
+          inputs: [
+            CalcInput(
+              symbol: 'z',
+              value: '$heightMeters м',
+              origin: heightOrigin,
+            ),
+            CalcInput(
+              symbol: 'тип местности',
+              value: terrain.name.toUpperCase(),
+              origin: 'Принят B (городские территории, лесные массивы) — '
+                  'типично для частного дома. Меняется на странице расчёта '
+                  'в следующей версии.',
+              reference: 'СП 20.13330.2016, п. 11.1.6',
+            ),
+            CalcInput(
+              symbol: 'k(z)',
+              value: '$k',
+              origin: 'Линейная интерполяция табл. 11.2 СП 20 для z и '
+                  'выбранного типа местности.',
+              reference: 'СП 20.13330.2016, табл. 11.2',
+            ),
+          ],
         ),
         CalcStep(
           title: 'Расчётное ветровое давление wm',
@@ -70,6 +103,32 @@ class WindLoadCalculator {
           unit: 'кН/м²',
           reference: 'СП 20.13330.2016, п. 11.1.3',
           note: 'Для расчёта анкеровки фундамента и стоек каркаса.',
+          inputs: [
+            CalcInput(
+              symbol: 'w0',
+              value: '${region.w0} кН/м²',
+              origin: 'Из шага «Нормативное ветровое давление w0» выше.',
+            ),
+            CalcInput(
+              symbol: 'k(z)',
+              value: '$k',
+              origin: 'Из шага «Коэффициент по высоте k(z)» выше.',
+            ),
+            CalcInput(
+              symbol: 'c',
+              value: '$aerodynamicCoefficient',
+              origin: 'Аэродинамический коэффициент. Принят 0.8 для '
+                  'наветренной стены.',
+              reference: 'СП 20.13330.2016, п. 11.1.7',
+            ),
+            CalcInput(
+              symbol: 'γf',
+              value: '$gammaFwind',
+              origin: 'Константа: коэффициент надёжности по ветровой '
+                  'нагрузке.',
+              reference: 'СП 20.13330.2016, п. 11.1.12',
+            ),
+          ],
         ),
       ],
     );
