@@ -125,7 +125,13 @@ lib/
 
 ## 5. Где остановились
 
-**Текущая версия: v6.** Реализованы шаги 1, 2 и 3 эталонного модуля «Фундамент». Демо: https://web-huyvayzd.devinapps.com/
+**Текущая версия: v6.** Реализованы шаги 1, 2 и 3 эталонного модуля «Фундамент».
+
+**Демо (доступно из РФ без VPN):** https://scrim4344-droid.github.io/construction-calculator/
+
+**GitHub-репозиторий:** https://github.com/scrim4344-droid/construction-calculator (ветка `init`, GitHub Actions деплоит на каждый push в `init`/`main`).
+
+**Прежний демо-URL:** https://web-huyvayzd.devinapps.com/ — работает, но из РФ только через VPN/proxy. Заменён на GitHub Pages (см. выше).
 
 **Сделано в v6 (новое):**
 
