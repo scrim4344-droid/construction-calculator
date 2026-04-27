@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../models/client_brief.dart';
 import '../../models/house_project.dart';
 import '../../models/soil_layer.dart';
+import '../../services/file_download.dart';
+import '../../services/foundation_explanation_pdf.dart';
 import '../../state/app_state.dart';
 import '../../widgets/calc_steps_card.dart';
 import '../../widgets/hints.dart';
@@ -19,11 +21,11 @@ class FoundationDesignPage extends StatelessWidget {
   const FoundationDesignPage({
     super.key,
     required this.projectId,
-    required this.totalLoadKnPerM2,
+    required this.loads,
   });
 
   final String projectId;
-  final double totalLoadKnPerM2;
+  final FoundationLoadsResult loads;
 
   HouseProject? _findProject(AppState state) {
     for (final p in state.projects) {
@@ -60,7 +62,7 @@ class FoundationDesignPage extends StatelessWidget {
         sections: Hints.foundationDesign,
         child: _DesignContent(
           project: project,
-          totalLoadKnPerM2: totalLoadKnPerM2,
+          loads: loads,
         ),
       ),
     );
@@ -70,11 +72,13 @@ class FoundationDesignPage extends StatelessWidget {
 class _DesignContent extends StatelessWidget {
   const _DesignContent({
     required this.project,
-    required this.totalLoadKnPerM2,
+    required this.loads,
   });
 
   final HouseProject project;
-  final double totalLoadKnPerM2;
+  final FoundationLoadsResult loads;
+
+  double get totalLoadKnPerM2 => loads.totalVerticalKnPerM2;
 
   @override
   Widget build(BuildContext context) {
@@ -166,6 +170,30 @@ class _DesignContent extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         _ResultCard(design: design),
+        const SizedBox(height: 16),
+        _DownloadExplanationButton(
+          project: project,
+          loads: loads,
+          design: design,
+          inputDataRows: {
+            'Объект': project.name,
+            'Регион': brief.region ?? '—',
+            'Этажность': '${brief.floors ?? "—"} эт.',
+            'Габариты пятна':
+                '${brief.footprintWidth} × ${brief.footprintLength} м',
+            'Площадь застройки A': '${footprintArea.toStringAsFixed(1)} м²',
+            'Длина несущих стен L':
+                '${wallsLength.toStringAsFixed(1)} м',
+            'Грунт основания': soil.title,
+            'R0 грунта': '${soil.r0KPa} кПа',
+            'Глубина промерзания df':
+                '${freezing.toStringAsFixed(1)} м (СП 131.13330)',
+            'Снеговой район':
+                'Из брифа → ${SnowRegion.byId(brief.snowZone ?? 3).title}',
+            'Ветровой район':
+                'Из брифа → район ${brief.windZone ?? 2}',
+          },
+        ),
         const SizedBox(height: 32),
       ],
     );
@@ -377,6 +405,74 @@ class _ResultCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DownloadExplanationButton extends StatefulWidget {
+  const _DownloadExplanationButton({
+    required this.project,
+    required this.loads,
+    required this.design,
+    required this.inputDataRows,
+  });
+
+  final HouseProject project;
+  final FoundationLoadsResult loads;
+  final StripFootingDesign design;
+  final Map<String, String> inputDataRows;
+
+  @override
+  State<_DownloadExplanationButton> createState() =>
+      _DownloadExplanationButtonState();
+}
+
+class _DownloadExplanationButtonState
+    extends State<_DownloadExplanationButton> {
+  bool _busy = false;
+
+  Future<void> _download() async {
+    setState(() => _busy = true);
+    try {
+      final bytes = await FoundationExplanationPdf.build(
+        project: widget.project,
+        loads: widget.loads,
+        design: widget.design,
+        inputDataRows: widget.inputDataRows,
+      );
+      await FileDownload.downloadBytes(
+        bytes: bytes,
+        filename:
+            'ПЗ_фундамент_${widget.project.name.replaceAll(" ", "_")}.pdf',
+        mimeType: 'application/pdf',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Не удалось сгенерировать ПЗ: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.tonalIcon(
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+      onPressed: _busy ? null : _download,
+      icon: _busy
+          ? const SizedBox(
+              height: 18,
+              width: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.picture_as_pdf_outlined),
+      label: Text(_busy
+          ? 'Готовим ПЗ…'
+          : 'Скачать пояснительную записку (PDF)'),
     );
   }
 }

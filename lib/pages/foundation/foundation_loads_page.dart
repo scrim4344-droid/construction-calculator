@@ -211,7 +211,7 @@ class _LoadsContent extends StatelessWidget {
               MaterialPageRoute(
                 builder: (_) => FoundationDesignPage(
                   projectId: project.id,
-                  totalLoadKnPerM2: result.totalVerticalKnPerM2,
+                  loads: result,
                 ),
               ),
             );
