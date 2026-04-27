@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/foundation.dart';
 import '../../models/house_project.dart';
 import '../../state/app_state.dart';
+import '../../widgets/hints.dart';
 import 'foundation_device_page.dart';
 
 /// Шаг 1 раздела «Фундамент»: выбор типа фундамента.
@@ -57,7 +58,15 @@ class FoundationTypePage extends StatelessWidget {
     final selectedType = project?.foundation.type;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Тип фундамента')),
+      appBar: AppBar(
+        title: const Text('Тип фундамента'),
+        actions: const [
+          HintIconButton(
+            title: 'Параметры фундамента',
+            sections: Hints.foundationWizard,
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),

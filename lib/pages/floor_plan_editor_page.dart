@@ -9,6 +9,7 @@ import '../models/house_project.dart';
 import '../services/floor_plan_generator.dart';
 import '../state/app_state.dart';
 import '../widgets/floor_plan_view.dart';
+import '../widgets/hints.dart';
 
 /// Полноэкранный редактор схематического плана этажа.
 ///
@@ -665,6 +666,10 @@ class _FloorPlanEditorPageState extends State<FloorPlanEditorPage> {
                 : 'Сохранить как новую версию',
             icon: const Icon(Icons.save_outlined),
             onPressed: _dirty && overlaps.isEmpty ? _save : null,
+          ),
+          const HintIconButton(
+            title: 'Редактор плана',
+            sections: Hints.floorPlanEditor,
           ),
         ],
       ),

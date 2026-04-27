@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/construction_type.dart';
 import '../state/app_state.dart';
+import '../widgets/hints.dart';
 
 /// Экран создания нового проекта. Спрашиваем название и тип конструкции.
 /// Возвращает созданный проект через `Navigator.pop(context, project)`.
@@ -38,7 +39,15 @@ class _ProjectCreatePageState extends State<ProjectCreatePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Новый проект')),
+      appBar: AppBar(
+        title: const Text('Новый проект'),
+        actions: const [
+          HintIconButton(
+            title: 'Новый проект',
+            sections: Hints.projectCreate,
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),

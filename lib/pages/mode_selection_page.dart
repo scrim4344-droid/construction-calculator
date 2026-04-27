@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/user_mode.dart';
 import '../state/app_state.dart';
+import '../widgets/hints.dart';
 
 /// Экран выбора режима.
 ///
@@ -24,6 +25,12 @@ class ModeSelectionPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Кто вы?'),
         automaticallyImplyLeading: canGoBack,
+        actions: const [
+          HintIconButton(
+            title: 'Выбор режима',
+            sections: Hints.modeSelection,
+          ),
+        ],
       ),
       body: Center(
         child: ConstrainedBox(

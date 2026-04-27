@@ -11,6 +11,7 @@ import '../../models/house_project.dart';
 import '../../models/soil_layer.dart';
 import '../../models/user_mode.dart';
 import '../../state/app_state.dart';
+import '../../widgets/hints.dart';
 
 /// Многошаговый визард брифа клиента.
 ///
@@ -90,6 +91,12 @@ class _BriefWizardPageState extends State<BriefWizardPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Бриф · шаг ${_step + 1} из $_stepsCount'),
+        actions: const [
+          HintIconButton(
+            title: 'Бриф клиента',
+            sections: Hints.briefWizard,
+          ),
+        ],
       ),
       body: Center(
         child: ConstrainedBox(

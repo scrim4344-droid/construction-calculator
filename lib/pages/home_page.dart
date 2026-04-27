@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/house_project.dart';
 import '../models/user_mode.dart';
 import '../state/app_state.dart';
+import '../widgets/hints.dart';
 import 'project_create_page.dart';
 import 'project_details_page.dart';
 import 'settings_page.dart';
@@ -24,6 +25,10 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Калькулятор проектировщика'),
         actions: [
+          const HintIconButton(
+            title: 'Главный экран',
+            sections: Hints.home,
+          ),
           IconButton(
             tooltip: 'Настройки',
             icon: const Icon(Icons.settings_outlined),
@@ -34,10 +39,13 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _createProject(context),
-        icon: const Icon(Icons.add),
-        label: const Text('Новый проект'),
+      floatingActionButton: Tooltip(
+        message: 'Создать новый проект и сразу заполнить бриф',
+        child: FloatingActionButton.extended(
+          onPressed: () => _createProject(context),
+          icon: const Icon(Icons.add),
+          label: const Text('Новый проект'),
+        ),
       ),
       body: Center(
         child: ConstrainedBox(

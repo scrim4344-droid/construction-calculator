@@ -10,6 +10,7 @@ import '../services/file_download.dart';
 import '../services/pdf_builder.dart';
 import '../state/app_state.dart';
 import '../widgets/floor_plan_view.dart';
+import '../widgets/hints.dart';
 import 'floor_plan_editor_page.dart';
 
 /// Экран «Чертежи».
@@ -45,7 +46,15 @@ class DrawingsPage extends StatelessWidget {
 
     if (project.drawings.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Чертежи')),
+        appBar: AppBar(
+          title: const Text('Чертежи'),
+          actions: const [
+            HintIconButton(
+              title: 'Чертежи',
+              sections: Hints.drawings,
+            ),
+          ],
+        ),
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
@@ -86,7 +95,15 @@ class DrawingsPage extends StatelessWidget {
     final mode = state.mode ?? UserMode.client;
     final canEdit = mode == UserMode.designer;
     return Scaffold(
-      appBar: AppBar(title: const Text('Чертежи')),
+      appBar: AppBar(
+        title: const Text('Чертежи'),
+        actions: const [
+          HintIconButton(
+            title: 'Чертежи',
+            sections: Hints.drawings,
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),

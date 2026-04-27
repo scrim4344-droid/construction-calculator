@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/foundation.dart';
 import '../../models/house_project.dart';
 import '../../state/app_state.dart';
+import '../../widgets/hints.dart';
 
 /// Шаг 2 раздела «Фундамент»: выбор устройства фундамента.
 ///
@@ -65,7 +66,15 @@ class _FoundationDevicePageState extends State<FoundationDevicePage> {
     final isComplete = foundation.isFilled;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Устройство · ${type.title}')),
+      appBar: AppBar(
+        title: Text('Устройство · ${type.title}'),
+        actions: const [
+          HintIconButton(
+            title: 'Параметры фундамента',
+            sections: Hints.foundationWizard,
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),

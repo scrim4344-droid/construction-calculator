@@ -1,0 +1,424 @@
+import 'package:flutter/material.dart';
+
+/// Иконка «?» в AppBar, открывает диалог с пошаговой подсказкой по экрану.
+///
+/// Подсказки оформлены единообразно по всем экранам, чтобы у пользователя
+/// формировалась привычная навигация: «не понятно — нажми вопросик в углу».
+class HintIconButton extends StatelessWidget {
+  const HintIconButton({
+    super.key,
+    required this.title,
+    required this.sections,
+    this.tooltip = 'Подсказка по этому экрану',
+  });
+
+  final String title;
+  final List<HintSection> sections;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      icon: const Icon(Icons.help_outline),
+      onPressed: () => showHintDialog(
+        context,
+        title: title,
+        sections: sections,
+      ),
+    );
+  }
+}
+
+/// Один раздел подсказки. Может быть либо текстовым абзацем (через [body]),
+/// либо нумерованным/маркированным списком (через [bullets]).
+class HintSection {
+  const HintSection({
+    required this.heading,
+    this.body,
+    this.bullets = const [],
+    this.icon,
+  });
+
+  final String heading;
+  final String? body;
+  final List<String> bullets;
+  final IconData? icon;
+}
+
+Future<void> showHintDialog(
+  BuildContext context, {
+  required String title,
+  required List<HintSection> sections,
+}) {
+  final theme = Theme.of(context);
+  return showDialog<void>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        icon: const Icon(Icons.lightbulb_outline),
+        title: Text(title),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480, maxHeight: 520),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final s in sections) ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (s.icon != null) ...[
+                        Icon(
+                          s.icon,
+                          size: 18,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Flexible(
+                        child: Text(
+                          s.heading,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  if (s.body != null) ...[
+                    Text(
+                      s.body!,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ],
+                  if (s.bullets.isNotEmpty) ...[
+                    for (final b in s.bullets)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6, right: 8),
+                              child: Container(
+                                width: 4,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                b,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                  const SizedBox(height: 14),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Понятно'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+/// Все тексты подсказок собраны в одном месте — проще править формулировки
+/// без обхода экранов. Каждый метод возвращает список секций для диалога.
+class Hints {
+  const Hints._();
+
+  static const List<HintSection> modeSelection = [
+    HintSection(
+      heading: 'Зачем выбирать режим?',
+      icon: Icons.help_outline,
+      body: 'От режима зависит уровень детализации интерфейса и состав '
+          'выходных документов. Поменять режим можно в любой момент в '
+          'настройках (шестерёнка на главной).',
+    ),
+    HintSection(
+      heading: 'Клиент',
+      icon: Icons.person_outline,
+      bullets: [
+        'Заполняете бриф пожеланий: участок, этажность, комнаты, материал.',
+        'Состав сооружения и эскизы планов подбираются автоматически.',
+        'Можно скачать PDF с эскизами, чтобы обсудить с проектировщиком.',
+      ],
+    ),
+    HintSection(
+      heading: 'Проектировщик',
+      icon: Icons.engineering_outlined,
+      bullets: [
+        'Тот же бриф, но плюс ручное редактирование состава.',
+        'Доступен полноэкранный редактор плана этажа: двигать комнаты, '
+            'менять размеры, добавлять двери и окна.',
+        'Каждое сохранение создаёт новую версию чертежей — старые не '
+            'теряются, можно сравнить.',
+        'Экспорт в PDF и DXF (AutoCAD).',
+      ],
+    ),
+  ];
+
+  static const List<HintSection> projectCreate = [
+    HintSection(
+      heading: 'Создание проекта',
+      icon: Icons.add,
+      body: 'Два поля: название и тип сооружения. Название можно поменять '
+          'позже — это просто метка для списка проектов.',
+    ),
+    HintSection(
+      heading: 'Тип сооружения',
+      icon: Icons.home_work_outlined,
+      bullets: [
+        'Частный дом — основной сценарий: фундамент, стены, крыша, '
+            'опционально лестница и мансарда.',
+        'Многоквартирный дом — заглушка («скоро»), пока не используется.',
+        'Металлоконструкция — заглушка («скоро»), пока не используется.',
+      ],
+    ),
+    HintSection(
+      heading: 'Что дальше',
+      icon: Icons.arrow_forward,
+      body: 'После «Создать проект» откроется экран проекта с тремя '
+          'разделами: бриф, состав, чертежи. Стартуйте с брифа.',
+    ),
+  ];
+
+  static const List<HintSection> home = [
+    HintSection(
+      heading: 'Что это за экран?',
+      icon: Icons.architecture_outlined,
+      body: 'Это список всех ваших проектов. Свежие — сверху. Откройте '
+          'любой, чтобы продолжить работу, или создайте новый.',
+    ),
+    HintSection(
+      heading: 'Как создать проект',
+      icon: Icons.add,
+      bullets: [
+        'Нажмите кнопку «Новый проект» внизу справа.',
+        'Введите название и выберите тип сооружения (частный дом, '
+            'многоквартирный, металлоконструкция).',
+        'После создания откроется проект — там будет бриф, состав и '
+            'чертежи.',
+      ],
+    ),
+    HintSection(
+      heading: 'Как удалить проект',
+      icon: Icons.delete_outline,
+      body: 'Нажмите на корзину справа от карточки проекта. Удаление '
+          'необратимо, попросит подтвердить.',
+    ),
+    HintSection(
+      heading: 'Сменить режим',
+      icon: Icons.settings_outlined,
+      body: 'Шестерёнка в правом верхнем углу — там можно переключиться '
+          'между режимом «Клиент» и «Проектировщик».',
+    ),
+  ];
+
+  static const List<HintSection> projectDetails = [
+    HintSection(
+      heading: 'Три раздела проекта',
+      icon: Icons.account_tree_outlined,
+      body: 'Заполняйте по очереди. Каждый раздел можно править в любой '
+          'момент — данные обновятся, чертежи перегенерируются.',
+    ),
+    HintSection(
+      heading: '1. Бриф клиента',
+      icon: Icons.assignment_outlined,
+      body: 'Опросник в 8 шагов: участок, грунт, этажность, площадь, '
+          'комнаты, дополнения, материал стен, особые пожелания. Можно '
+          'выйти на любом шаге — прогресс сохранится.',
+    ),
+    HintSection(
+      heading: '2. Состав сооружения',
+      icon: Icons.foundation_outlined,
+      body: 'Фундамент, стены, крыша, лестница. В режиме «Клиент» — '
+          'только просмотр (всё подобрано автоматически по брифу). В '
+          'режиме «Проектировщик» — каждый элемент можно открыть и '
+          'отредактировать вручную.',
+    ),
+    HintSection(
+      heading: '3. Чертежи',
+      icon: Icons.draw_outlined,
+      body: 'Сгенерированные планы этажей. Можно скачать PDF/DXF, '
+          'а в режиме «Проектировщик» — открыть редактор и подвинуть '
+          'комнаты, добавить двери и окна.',
+    ),
+  ];
+
+  static const List<HintSection> composition = [
+    HintSection(
+      heading: 'Состав сооружения',
+      icon: Icons.account_tree_outlined,
+      body: 'Список конструктивных элементов, подобранных по брифу.',
+    ),
+    HintSection(
+      heading: 'Режим «Клиент»',
+      icon: Icons.person_outline,
+      body: 'Список — только для просмотра. Чтобы поменять рекомендацию, '
+          'отредактируйте бриф (например, измените тип грунта или этажность). '
+          'После этого нажмите «Перегенерировать» внизу — состав и чертежи '
+          'обновятся.',
+    ),
+    HintSection(
+      heading: 'Режим «Проектировщик»',
+      icon: Icons.engineering_outlined,
+      bullets: [
+        'Каждый элемент списка кликабельный — открывается визард с '
+            'параметрами (тип фундамента, материал стен и т. д.).',
+        '«Перегенерировать чертежи» создаёт новую партию эскизов с '
+            'учётом текущего состава. Старые партии остаются в истории.',
+        '«Сбросить к авторасчёту» — вернуть рекомендацию движка правил.',
+      ],
+    ),
+    HintSection(
+      heading: 'Обоснование выбора фундамента',
+      icon: Icons.fact_check_outlined,
+      body: 'Под карточкой фундамента — короткий список «почему именно '
+          'такой» (со ссылками на СП). Полезно показать клиенту.',
+    ),
+  ];
+
+  static const List<HintSection> briefWizard = [
+    HintSection(
+      heading: 'Бриф в 8 шагов',
+      icon: Icons.assignment_outlined,
+      body: 'Стрелки внизу — «Назад / Далее». Прогресс сохраняется после '
+          'каждого шага: можно безопасно закрыть приложение.',
+    ),
+    HintSection(
+      heading: 'Шаги',
+      icon: Icons.list_alt,
+      bullets: [
+        '1. Регион — снеговой/ветровой район подтягиваются автоматически '
+            '(СП 20.13330). Проектировщик может переопределить вручную.',
+        '2. Тип грунта — нужен для подбора фундамента (СП 22.13330).',
+        '3. Этажность + мансарда / подвал.',
+        '4. Целевая площадь и пятно застройки.',
+        '5. Комнаты — выберите, сколько каких типов нужно.',
+        '6. Дополнения — гараж, терраса, балкон, эркер, второй свет, '
+            'лестница.',
+        '7. Материал стен (кирпич, газобетон, дерево…) — повлияет на '
+            'выбор фундамента и крыши.',
+        '8. Особые пожелания — свободный текст.',
+      ],
+    ),
+    HintSection(
+      heading: 'После «Завершить»',
+      icon: Icons.check_circle_outline,
+      body: 'Состав сооружения автоматически подтягивается из движка '
+          'правил. В режиме «Клиент» — сразу же генерируется первая '
+          'партия эскизов планов.',
+    ),
+  ];
+
+  static const List<HintSection> foundationWizard = [
+    HintSection(
+      heading: 'Параметры фундамента',
+      icon: Icons.foundation_outlined,
+      body: 'Подобранный по брифу тип уже выбран. Можно поменять, если '
+          'у вас есть основания (геология участка, опыт стройки).',
+    ),
+    HintSection(
+      heading: 'Что выбираем',
+      icon: Icons.checklist,
+      bullets: [
+        'Тип: ленточный, плита, сваи, столбчатый, ростверк.',
+        'Устройство: монолит / сборные блоки.',
+        'Материал и марка бетона.',
+        'Глубина заложения — связана с глубиной промерзания (зависит от '
+            'региона).',
+      ],
+    ),
+    HintSection(
+      heading: 'Обоснование выбора',
+      icon: Icons.menu_book_outlined,
+      body: 'Под параметрами — список причин «почему именно так» со '
+          'ссылками на СП. Полезно объяснить клиенту.',
+    ),
+  ];
+
+  static const List<HintSection> drawings = [
+    HintSection(
+      heading: 'История чертежей',
+      icon: Icons.history,
+      body: 'Каждое сохранение — отдельная партия (версия). Свежие сверху, '
+          'старые ниже. Ничего не теряется.',
+    ),
+    HintSection(
+      heading: 'Что можно сделать',
+      icon: Icons.touch_app_outlined,
+      bullets: [
+        'Скачать партию в PDF — все этажи одним файлом, шрифт с '
+            'кириллицей, толстые стены / двери / окна как на экране.',
+        'Скачать в DXF — каждый этаж отдельным файлом для AutoCAD.',
+        'В режиме «Проектировщик» — открыть план этажа в редакторе '
+            '(карандаш на карточке плана).',
+      ],
+    ),
+    HintSection(
+      heading: 'Перегенерация',
+      icon: Icons.refresh,
+      body: 'Если вы поменяли бриф или состав сооружения — вернитесь в '
+          '«Состав» и нажмите «Перегенерировать». Появится новая партия, '
+          'старая останется ниже.',
+    ),
+  ];
+
+  static const List<HintSection> floorPlanEditor = [
+    HintSection(
+      heading: 'Редактор плана',
+      icon: Icons.draw_outlined,
+      body: 'Подвинуть комнаты, поменять размеры, добавить двери и окна. '
+          'Изменения округляются до сетки 0.1 м, минимальная сторона — 1 м.',
+    ),
+    HintSection(
+      heading: 'Режим «Комнаты»',
+      icon: Icons.crop_square,
+      bullets: [
+        'Касание — выделить.',
+        'Тащить за тело — переместить.',
+        'Тащить за угловую ручку — изменить размеры (от противоположного '
+            'угла).',
+        'Кнопки в AppBar: «+» — добавить комнату, корзина — удалить '
+            'выделенную.',
+      ],
+    ),
+    HintSection(
+      heading: 'Режим «Двери и окна»',
+      icon: Icons.door_sliding_outlined,
+      bullets: [
+        'Касание по проёму — выделить.',
+        'Тащить за тело — двигать вдоль стены.',
+        'Тащить за концы — менять длину проёма.',
+        'Кнопки: дверь / окно / входная дверь / удалить выделенный.',
+        'Минимальная длина проёма — 0.6 м (СП 55.13330).',
+      ],
+    ),
+    HintSection(
+      heading: 'Сохранение',
+      icon: Icons.save_outlined,
+      body: 'Дискета — сохранить как новую версию (старые планы не '
+          'затираются, остаются в истории на вкладке «Чертежи»). Стрелка '
+          'обновления — сбросить ручные правки и вернуться к авторасчёту. '
+          'Если есть пересечения комнат — кнопка сохранения заблокирована.',
+    ),
+  ];
+}

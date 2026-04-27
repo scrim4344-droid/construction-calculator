@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/house_project.dart';
 import '../state/app_state.dart';
+import '../widgets/hints.dart';
 import 'brief_page.dart';
 import 'composition_page.dart';
 import 'drawings_page.dart';
@@ -43,7 +44,15 @@ class ProjectDetailsPage extends StatelessWidget {
         project.staircase.isFilled;
 
     return Scaffold(
-      appBar: AppBar(title: Text(project.name)),
+      appBar: AppBar(
+        title: Text(project.name),
+        actions: const [
+          HintIconButton(
+            title: 'Структура проекта',
+            sections: Hints.projectDetails,
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),

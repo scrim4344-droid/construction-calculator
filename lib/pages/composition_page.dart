@@ -6,6 +6,7 @@ import '../models/house_project.dart';
 import '../models/user_mode.dart';
 import '../services/composition_planner.dart';
 import '../state/app_state.dart';
+import '../widgets/hints.dart';
 import 'foundation/foundation_type_page.dart';
 import 'roof_page.dart';
 import 'staircase_page.dart';
@@ -70,7 +71,15 @@ class CompositionPage extends StatelessWidget {
     final briefStarted = project.brief.isStarted;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Состав сооружения')),
+      appBar: AppBar(
+        title: const Text('Состав сооружения'),
+        actions: const [
+          HintIconButton(
+            title: 'Состав сооружения',
+            sections: Hints.composition,
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),
